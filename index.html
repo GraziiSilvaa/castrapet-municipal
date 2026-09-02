@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CastraPet Municipal</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+html{scroll-behavior:smooth}
+body{background:#f2f8ff;color:#17324d;overflow-x:hidden}
+.patinhas{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.patinhas span{position:absolute;font-size:30px;opacity:.10;animation:flutuarPata 14s linear infinite}
+.patinhas span:nth-child(1){left:5%;animation-delay:0s}.patinhas span:nth-child(2){left:15%;animation-delay:3s}
+.patinhas span:nth-child(3){left:27%;animation-delay:6s}.patinhas span:nth-child(4){left:39%;animation-delay:1s}
+.patinhas span:nth-child(5){left:51%;animation-delay:8s}.patinhas span:nth-child(6){left:63%;animation-delay:4s}
+.patinhas span:nth-child(7){left:74%;animation-delay:10s}.patinhas span:nth-child(8){left:85%;animation-delay:5s}
+.patinhas span:nth-child(9){left:93%;animation-delay:2s}
+@keyframes flutuarPata{from{transform:translateY(110vh) rotate(0deg)}to{transform:translateY(-100px) rotate(360deg)}}
+
+header,.hero,.container,.faq,.ajuda,footer{position:relative;z-index:1}
+header{background:linear-gradient(135deg,#005bbb,#00a8e8);color:white;padding:18px 6%;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:10px}.logo-icon{font-size:38px}.logo h1{font-size:22px}.logo small{opacity:.9}
+nav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}nav a{color:white;text-decoration:none;cursor:pointer;font-weight:bold}
+.hero{min-height:420px;padding:60px 10%;background:linear-gradient(135deg,#0066cc,#00b4db);color:white;display:flex;justify-content:space-between;align-items:center}
+.hero-text{max-width:650px}.hero h2{font-size:42px;margin-bottom:15px}.hero p{font-size:18px;line-height:1.6}
+.dog{font-size:125px;animation:flutuarDog 2s infinite alternate}@keyframes flutuarDog{from{transform:translateY(0)}to{transform:translateY(-18px)}}
+
+.container{width:90%;max-width:950px;margin:40px auto;background:white;padding:35px;border-radius:18px;box-shadow:0 5px 25px #0002}
+.container h2{color:#0066cc;text-align:center;margin-bottom:10px}.subtitulo{text-align:center;color:#666;margin-bottom:25px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:16px}.campo{display:flex;flex-direction:column}
+.campo label{font-weight:bold;margin-bottom:6px}.campo input,.campo select,.campo textarea{padding:12px;border:1px solid #ccd8e3;border-radius:8px;outline:none}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:#0066cc}.campo textarea{min-height:100px;resize:vertical}.completo{grid-column:1/3}
+button{cursor:pointer;border:none;border-radius:8px;padding:11px 15px;font-weight:bold}.btn{background:#0066cc;color:white}.btn:hover{opacity:.9}
+.btn-verde{background:#198754;color:white}.btn-amarelo{background:#ffc107;color:#222}.btn-vermelho{background:#dc3545;color:white}.btn-cinza{background:#666;color:white}
+.telefones{display:flex;flex-direction:column;gap:8px}.telefone-item{display:flex;gap:8px}.telefone-item input{flex:1}
+.foto{border:2px dashed #70bce8;padding:20px;text-align:center;border-radius:10px;background:#f5fbff}
+#preview{display:none;max-width:180px;max-height:180px;margin:15px auto;border-radius:12px}
+.info-box{background:#eef8ff;padding:15px;border-radius:10px;margin-top:15px}.aviso{padding:15px;margin-top:15px;border-radius:10px;background:#fff3cd;color:#664d03}
+.aviso-atraso{background:#ffe5e5;color:#990000}.faq{max-width:900px;margin:35px auto;width:90%}.faq h2{color:#0066cc;text-align:center;margin-bottom:20px}
+.faq details{background:white;margin:10px 0;padding:15px;border-radius:8px;box-shadow:0 2px 8px #0001}.faq summary{cursor:pointer;font-weight:bold}.faq p{margin-top:10px;line-height:1.5}
+.ajuda{background:#e8f5ff;text-align:center;padding:45px 10%}.ajuda h2{color:#0066cc;margin-bottom:12px}
+.whatsapp{display:inline-block;margin-top:18px;padding:13px 22px;border-radius:25px;background:#159447;color:white;text-decoration:none;font-weight:bold}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:white;width:90%;max-width:520px;max-height:90vh;overflow:auto;padding:30px;border-radius:15px}
+.modal-box h2{color:#0066cc;text-align:center;margin-bottom:20px}.modal-box input,.modal-box select,.modal-box textarea{width:100%;padding:13px;margin-bottom:12px;border:1px solid #ccc;border-radius:7px}.modal-box button{width:100%;margin-top:7px}
+#areaDono,#moderador{display:none}.protocolo-box{background:#eef7ff;border:2px solid #0066cc;border-radius:12px;padding:20px;text-align:center;margin:20px 0}
+.protocolo{font-size:26px;font-weight:bold;color:#0066cc;margin:12px;word-break:break-all}
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:20px 0}.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px #0001}.card h3{color:#0066cc;margin-bottom:8px}.card strong{font-size:28px}
+.filtros{background:white;padding:20px;border-radius:12px;margin-bottom:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.filtros input,.filtros select{padding:10px;border:1px solid #ccc;border-radius:7px}
+.lista{display:flex;flex-direction:column;gap:20px}.grupo-tutor{background:#eaf5ff;border-radius:15px;padding:20px}
+.titulo-tutor{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}.titulo-tutor h2{color:#005bbb;margin:0 0 5px}.seta{font-size:25px;transition:.25s;color:#005bbb;padding:10px}
+.titulo-tutor.minimizado .seta{transform:rotate(-90deg)}.animais-tutor{display:block;margin-top:10px}.animais-tutor.minimizado{display:none}
+.pet-card{background:white;padding:20px;border-radius:12px;margin-top:12px;box-shadow:0 3px 12px #0001;display:flex;gap:20px}.pet-card img{width:130px;height:130px;object-fit:cover;border-radius:12px}
+.pet-info{flex:1}.pet-info h3{color:#0066cc;margin-bottom:8px}.pet-info p{margin:5px 0}.status{display:inline-block;padding:7px 12px;margin-top:8px;border-radius:20px;background:#fff3cd;color:#856404}.acoes{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.notificacao-dono{background:#e8f5e8;border-left:5px solid #198754;padding:15px;border-radius:8px;margin-top:12px}.email-info{background:#fff8dc;padding:15px;border-radius:10px;margin-top:15px}
+.historico{background:#f8f8f8;padding:15px;margin-top:30px;border-radius:10px}.historico-item{padding:8px;border-bottom:1px solid #ddd}
+.profissional{background:white;padding:20px;border-radius:12px;margin-top:15px;box-shadow:0 2px 8px #0001}.profissional h3{color:#0066cc;margin-bottom:8px}
+.permissoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.profissional input[type="text"],.profissional input[type="password"]{width:100%;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:7px}
+.mural{background:#fff8dc;border-left:6px solid #ffc107;border-radius:12px;padding:20px;margin:25px auto;width:90%;max-width:950px;box-shadow:0 3px 12px #0001;position:relative;z-index:2}
+.mural h2{color:#8a6500;margin-bottom:8px}.mural-conteudo{font-size:17px;line-height:1.6;white-space:pre-wrap}.mural small{display:block;margin-top:10px;color:#777}
+.vagas{background:#eef7ff;border:2px solid #0066cc;border-radius:12px;padding:18px;margin:20px 0}.vagas h3{color:#0066cc;margin-bottom:10px}
+.vagas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.vaga-mes{background:white;border-radius:10px;padding:14px;box-shadow:0 2px 7px #0001}.vaga-mes strong{font-size:24px;color:#0066cc}
+.badge{display:inline-block;padding:5px 9px;border-radius:15px;font-size:12px;background:#e8f5e8;color:#176b35}.badge.fechada{background:#ffe5e5;color:#a40000}.badge.espera{background:#fff3cd;color:#7a5a00}
+footer{background:#073b66;color:white;text-align:center;padding:22px;margin-top:40px}
+.moderador-bloco{background:#f7fbff;border:1px solid #d7e8f5;padding:20px;border-radius:12px;margin-top:20px}.moderador-bloco h3{color:#0066cc;margin-bottom:10px}
+textarea.mural-editor{min-height:110px;width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;resize:vertical}
+@media(max-width:800px){
+header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:center;gap:30px}.hero h2{font-size:31px}.dog{font-size:80px}
+.form,.filtros{grid-template-columns:1fr}.completo{grid-column:1}.dashboard,.vagas-grid{grid-template-columns:1fr}.pet-card{flex-direction:column}.pet-card img{width:100%;max-width:180px}.permissoes{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<div class="patinhas"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
+
+<header>
+  <div class="logo"><div class="logo-icon">🐾</div><div><h1>CastraPet Municipal</h1><small>Programa Municipal de Saúde Animal</small></div></div>
+  <nav>
+    <a onclick="inicio()">Início</a>
+    <a onclick="irCadastro()">Cadastro</a>
+    <a onclick="abrirDono()">Área do dono</a>
+    <a onclick="abrirModerador()">Moderador</a>
+  </nav>
+</header>
+
+<section class="hero" id="inicio">
+  <div class="hero-text">
+    <h2>Programa Municipal de Castração</h2>
+    <p>Cadastre seu animal, acompanhe o andamento do atendimento e receba informações importantes sobre a castração do seu pet em um só lugar.</p><br>
+    <button class="btn" onclick="irCadastro()">Cadastrar meu animal</button>
+  </div>
+  <div class="dog">🐕</div>
+</section>
+
+<section class="mural" id="muralPublico">
+  <h2>📌 Mural de avisos</h2>
+  <div class="mural-conteudo" id="muralTexto">Nenhum aviso publicado no momento.</div>
+  <small id="muralData"></small>
+</section>
+
+<section class="container">
+  <h2>Vagas para castração</h2>
+  <p class="subtitulo">A quantidade de vagas é controlada por mês. Quando um mês atingir o limite, os novos cadastros passam para o próximo mês disponível.</p>
+  <div class="vagas" id="vagasPublicas"></div>
+</section>
+
+<section class="container" id="cadastro">
+  <h2>Cadastro do animal</h2>
+  <p class="subtitulo">Preencha os dados do responsável e do animal. Se tiver mais de um pet, faça um cadastro para cada animal.</p>
+
+  <form class="form" id="formCadastro">
+    <div class="campo"><label>Nome do responsável</label><input id="dono" required></div>
+    <div class="campo"><label>CPF</label><input id="cpf" maxlength="14" placeholder="000.000.000-00" inputmode="numeric" required></div>
+
+    <div class="campo completo">
+      <label>Telefone / WhatsApp</label>
+      <div class="telefones" id="telefones">
+        <div class="telefone-item">
+          <input class="telefone" maxlength="15" placeholder="(00) 00000-0000" inputmode="numeric" required>
+          <button type="button" class="btn-vermelho" onclick="removerTelefone(this)">X</button>
+        </div>
+      </div>
+      <button type="button" class="btn" style="margin-top:8px;width:max-content" onclick="adicionarTelefone()">+ Adicionar outro telefone</button>
+    </div>
+
+    <div class="campo"><label>E-mail</label><input type="email" id="email" required></div>
+    <div class="campo"><label>Nome do animal</label><input id="animal" required></div>
+    <div class="campo"><label>Espécie</label><select id="especie" required><option value="">Selecione</option><option>Cachorro</option><option>Gato</option></select></div>
+    <div class="campo"><label>Raça</label><input id="raca" required></div>
+    <div class="campo"><label>Cor</label><input id="cor" required></div>
+    <div class="campo"><label>Peso aproximado (kg)</label><input type="number" id="peso" min="0" step=".1" required></div>
+    <div class="campo"><label>Idade</label><div style="display:flex;gap:8px"><input type="number" id="idade" min="0" placeholder="Ex.: 2" required style="flex:1"><select id="idadeTipo" required style="flex:1"><option value="">Selecione</option><option value="meses">Meses</option><option value="anos">Anos</option></select></div></div>
+    <div class="campo"><label>Porte</label><select id="porte" required><option value="">Selecione</option><option>Pequeno</option><option>Médio</option><option>Grande</option></select></div>
+    <div class="campo"><label>Sexo</label><select id="sexo" required><option value="">Selecione</option><option>Macho</option><option>Fêmea</option></select></div>
+    <div class="campo completo"><label>Foto do animal</label><div class="foto"><input type="file" id="foto" accept="image/*" required><img id="preview"></div></div>
+    <div class="campo completo"><label>Informações importantes sobre o animal</label><textarea id="informacoes" placeholder="Ex.: doenças, medicamentos, alergias, deficiência, animal muito nervoso, necessidades especiais etc."></textarea></div>
+    <button class="btn completo" type="submit">Enviar cadastro</button>
+  </form>
+</section>
+
+<section id="areaDono" class="container">
+  <h2>Área do responsável</h2>
+  <div id="dadosDono"></div>
+  <button class="btn-cinza" onclick="sairDono()">Sair</button>
+</section>
+
+<section class="faq">
+  <h2>Perguntas frequentes</h2>
+  <details><summary>Onde será realizado o atendimento?</summary><p>O local será informado pela equipe responsável quando o atendimento for agendado.</p></details>
+  <details><summary>Quais documentos devo apresentar?</summary><p>Leve os documentos solicitados pela Secretaria de Saúde e as informações do cadastro do animal.</p></details>
+  <details><summary>Como acompanho meu cadastro?</summary><p>Depois de enviar o cadastro, aparecerá um protocolo exclusivo do seu animal. Guarde esse número.</p></details>
+  <details><summary>O que acontece se eu não puder comparecer?</summary><p>Entre em contato com a equipe responsável para verificar a possibilidade de cancelamento ou remarcação.</p></details>
+  <details><summary>Como funciona o jejum?</summary><p>As orientações de jejum serão informadas pela equipe antes do procedimento.</p></details>
+  <details><summary>Meu animal tem alguma necessidade especial?</summary><p>Informe a equipe no cadastro. Doenças, medicamentos, alergias, deficiências ou outras necessidades devem ser informadas.</p></details>
+  <details><summary>Minha cadela está no cio. Ela pode ser castrada?</summary><p>Para este programa, o cadastro deve considerar o período indicado pela equipe. Se a fêmea estiver no cio, aguarde pelo menos 15 dias após o término do cio antes de realizar o procedimento, salvo orientação diferente da equipe veterinária responsável.</p></details>
+</section>
+
+<section class="ajuda">
+  <h2>Precisa de ajuda?</h2><p>Fale com a equipe responsável pelo programa.</p>
+  <a class="whatsapp" id="whatsapp" target="_blank">💬 Falar pelo WhatsApp</a>
+</section>
+
+<section id="moderador">
+  <div class="container" style="margin-top:0">
+    <div style="background:linear-gradient(135deg,#005bbb,#00a8e8);color:white;padding:25px;border-radius:15px">
+      <h1>🛡️ Painel da Secretaria</h1>
+      <p>Gerenciamento dos cadastros, profissionais, vagas, mural e atendimentos.</p>
+      <button class="btn" onclick="sairModerador()" style="margin-top:12px">Sair</button>
+    </div>
+
+    <div class="dashboard">
+      <div class="card"><h3>Cadastros</h3><strong id="qtdCadastros">0</strong></div>
+      <div class="card"><h3>Pendentes</h3><strong id="qtdPendentes">0</strong></div>
+      <div class="card"><h3>Em espera</h3><strong id="qtdEspera">0</strong></div>
+    </div>
+
+    <div class="moderador-bloco">
+      <h3>📌 Editar mural fixado</h3>
+      <textarea id="editorMural" class="mural-editor" placeholder="Ex.: A próxima castração ocorrerá no dia 20/09."></textarea>
+      <button class="btn" onclick="salvarMural()">Publicar / atualizar mural</button>
+    </div>
+
+    <div class="moderador-bloco">
+      <h3>📅 Configurar vagas mensais</h3>
+      <p style="margin-bottom:12px">Escolha o mês e defina o limite de vagas. Se o mês lotar, o próximo cadastro vai automaticamente para o próximo mês disponível.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <input id="mesVagas" type="month" style="padding:12px;border:1px solid #ccc;border-radius:8px">
+        <input id="limiteVagas" type="number" min="0" value="50" style="padding:12px;border:1px solid #ccc;border-radius:8px">
+      </div>
+      <button class="btn" onclick="salvarLimiteVagas()" style="margin-top:10px">Salvar limite do mês</button>
+      <div id="vagasModerador" style="margin-top:15px"></div>
+    </div>
+
+    <div class="filtros">
+      <input id="filtroNome" placeholder="Pesquisar tutor ou animal" oninput="renderizarModerador()">
+      <input id="filtroCpf" placeholder="CPF" oninput="renderizarModerador()">
+      <select id="filtroStatus" onchange="renderizarModerador()"><option value="">Todos os status</option><option>Cadastrado</option><option>Aprovado</option><option>Agendado</option><option>Realizado</option><option>Recusado</option><option>Necessita correção</option><option>Em espera</option></select>
+      <button class="btn" onclick="exportarCSV()">Exportar CSV</button>
+    </div>
+
+    <div id="listaModerador" class="lista"></div>
+
+    <div class="historico"><h2>Histórico de atendimentos</h2><div id="historico"></div></div>
+
+    <div id="gerenciador" style="margin-top:30px">
+      <h2 style="color:#0066cc">Gerenciador de profissionais</h2>
+      <p style="margin-top:8px">Somente o administrador pode criar profissionais e alterar permissões.</p>
+      <div class="profissional">
+        <h3>Cadastrar profissional</h3>
+        <input type="text" id="novoProfNome" placeholder="Nome da profissional">
+        <input type="text" id="novoProfLogin" placeholder="Login">
+        <input type="password" id="novoProfSenha" placeholder="Senha">
+        <div class="permissoes">
+          <label><input type="checkbox" id="permCadastro" checked> Cadastrar profissionais</label>
+          <label><input type="checkbox" id="permEditar" checked> Editar cadastros</label>
+          <label><input type="checkbox" id="permSite"> Editar site</label>
+        </div>
+        <button class="btn" onclick="criarProfissional()">Criar profissional</button>
+      </div>
+      <div id="listaProfissionais"></div>
+    </div>
+  </div>
+</section>
+
+<footer>CastraPet Municipal<br>Secretaria Municipal de Saúde<br>Programa Municipal de Saúde Animal<br><br>© 2026 CastraPet</footer>
+
+<div class="modal" id="modalDono">
+  <div class="modal-box"><h2>Área do responsável</h2>
+    <p style="margin-bottom:15px">Informe o nome usado no cadastro e o protocolo recebido.</p>
+    <input id="loginNome" placeholder="Nome do responsável"><input id="loginProtocolo" placeholder="Ex.: PET-2026-123456">
+    <button class="btn" onclick="loginDono()">Entrar</button><button class="btn-cinza" onclick="fecharModais()">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal" id="modalModerador">
+  <div class="modal-box"><h2>Área da Secretaria</h2>
+    <input id="usuario" placeholder="Login"><input type="password" id="senha" placeholder="Senha">
+    <button class="btn" onclick="loginModerador()">Entrar</button><button class="btn-cinza" onclick="fecharModais()">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal" id="modalProtocolo">
+  <div class="modal-box" style="text-align:center"><h2>Cadastro realizado! 🐾</h2>
+    <p>O cadastro do seu animal foi salvo com sucesso.</p>
+    <div class="protocolo-box"><p>Seu protocolo:</p><div id="protocoloExibido" class="protocolo"></div><button class="btn" onclick="copiarProtocolo()">📋 Copiar protocolo</button></div>
+    <p><strong>Guarde esse protocolo.</strong><br>Ele será usado junto com seu nome para acompanhar o cadastro.</p>
+    <button class="btn-verde" style="margin-top:15px" onclick="irAreaDonoDepoisCadastro()">🔎 Acompanhar agora</button>
+    <button class="btn-cinza" style="margin-top:8px" onclick="fecharProtocolo()">Fechar</button>
+  </div>
+</div>
+
+<script>
+const NUMERO_WHATSAPP="5511999999999";
+document.getElementById("whatsapp").href="https://wa.me/"+NUMERO_WHATSAPP+"?text="+encodeURIComponent("Olá! Tenho uma dúvida sobre o programa de castração.");
+
+const LIMITE_PADRAO=50;
+
+function carregarCadastros(){try{const d=JSON.parse(localStorage.getItem("cadastros")||"[]");return Array.isArray(d)?d:[]}catch(e){return[]}}
+function salvarCadastros(d){localStorage.setItem("cadastros",JSON.stringify(d))}
+function carregarConfiguracao(){try{return JSON.parse(localStorage.getItem("configCastraPet")||"{}")}catch(e){return{}}}
+function salvarConfiguracao(c){localStorage.setItem("configCastraPet",JSON.stringify(c))}
+function normalizarCadastro(c){
+  c.telefones=c.telefones||((c.telefone)?[c.telefone]:[]);
+  c.notificacoes=c.notificacoes||[]; c.historico=c.historico||[];
+  c.status=c.status||"Cadastrado"; c.criadoEm=c.criadoEm||new Date().toISOString();
+  c.mesVaga=c.mesVaga||mesAtual();
+    c.filaEspera=!!c.filaEspera;
+  return c;
+}
+function escapeHTML(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function mascaraCPF(v){
+  let x=v.replace(/\D/g,"").slice(0,11);
+  if(x.length>9)x=x.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,"$1.$2.$3-$4");
+  else if(x.length>6)x=x.replace(/(\d{3})(\d{3})(\d{1,3})/,"$1.$2.$3");
+  else if(x.length>3)x=x.replace(/(\d{3})(\d{1,3})/,"$1.$2");
+  return x;
+}
+function mascaraTelefone(v){
+  let x=v.replace(/\D/g,"").slice(0,11);
+  if(x.length>10)x=x.replace(/(\d{2})(\d{5})(\d{1,4})/,"($1) $2-$3");
+  else if(x.length>6)x=x.replace(/(\d{2})(\d{4})(\d{1,4})/,"($1) $2-$3");
+  else if(x.length>2)x=x.replace(/(\d{2})(\d{1,5})/,"($1) $2");
+  return x;
+}
+document.getElementById("cpf").addEventListener("input",e=>e.target.value=mascaraCPF(e.target.value));
+function aplicarMascaraTelefone(input){input.addEventListener("input",e=>e.target.value=mascaraTelefone(e.target.value))}
+document.querySelectorAll(".telefone").forEach(aplicarMascaraTelefone);
+
+function adicionarTelefone(){
+  const div=document.createElement("div"); div.className="telefone-item";
+  div.innerHTML='<input class="telefone" maxlength="15" placeholder="(00) 00000-0000" inputmode="numeric" required><button type="button" class="btn-vermelho" onclick="removerTelefone(this)">X</button>';
+  document.getElementById("telefones").appendChild(div); aplicarMascaraTelefone(div.querySelector(".telefone"));
+}
+function removerTelefone(btn){
+  const itens=document.querySelectorAll(".telefone-item");
+  if(itens.length<=1){alert("É necessário manter pelo menos um telefone.");return}
+  btn.parentElement.remove();
+}
+
+document.getElementById("foto").addEventListener("change",function(){
+  const f=this.files[0]; if(!f)return;
+  const r=new FileReader(); r.onload=e=>{const p=document.getElementById("preview");p.src=e.target.result;p.style.display="block"};r.readAsDataURL(f);
+});
+
+function gerarProtocolo(){return"PET-2026-"+Date.now().toString().slice(-6)}
+function mesAtual(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+function nomeMes(mes){const [a,m]=mes.split("-");return new Date(Number(a),Number(m)-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}
+function proximoMes(mes){const [a,m]=mes.split("-").map(Number);const d=new Date(a,m,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+
+function limiteDoMes(mes){
+  const c=carregarConfiguracao(); return c.limites && Object.prototype.hasOwnProperty.call(c.limites,mes) ? Number(c.limites[mes]) : LIMITE_PADRAO;
+}
+function quantidadeMes(mes){
+  return carregarCadastros().filter(c=>normalizarCadastro(c).mesVaga===mes && !c.filaEspera && c.status!=="Recusado").length;
+}
+function encontrarMesDisponivel(inicio){
+  let mes=inicio||mesAtual();
+  for(let i=0;i<24;i++){
+    if(quantidadeMes(mes)<limiteDoMes(mes))return mes;
+    mes=proximoMes(mes);
+  }
+  return null;
+}
+function atualizarFilaAposCancelamento(mes){
+  const cad=carregarCadastros().map(normalizarCadastro);
+  const espera=cad.filter(c=>c.filaEspera).sort((a,b)=>new Date(a.criadoEm)-new Date(b.criadoEm));
+  if(!espera.length)return;
+  const vaga=espera.find(c=>quantidadeMes(mes)<limiteDoMes(mes));
+  if(vaga){
+    vaga.filaEspera=false; vaga.mesVaga=mes; vaga.status="Cadastrado";
+    vaga.notificacoes.push("Uma vaga foi liberada e seu cadastro entrou no mês de "+nomeMes(mes)+".");
+    vaga.historico.push("Vaga liberada da fila de espera em "+new Date().toLocaleString("pt-BR"));
+    salvarCadastros(cad);
+  }
+}
+
+document.getElementById("formCadastro").addEventListener("submit",function(e){
+  e.preventDefault();
+  const mes=encontrarMesDisponivel(mesAtual());
+  const espera=!mes;
+  const telefones=Array.from(document.querySelectorAll(".telefone")).map(i=>i.value.trim()).filter(Boolean);
+  const cadastro={
+    id:Date.now(),protocolo:gerarProtocolo(),
+    dono:document.getElementById("dono").value.trim(),cpf:document.getElementById("cpf").value.trim(),telefones,
+    email:document.getElementById("email").value.trim(),animal:document.getElementById("animal").value.trim(),
+    especie:document.getElementById("especie").value,raca:document.getElementById("raca").value.trim(),cor:document.getElementById("cor").value.trim(),
+    peso:document.getElementById("peso").value,idade:document.getElementById("idade").value+" "+document.getElementById("idadeTipo").value,
+    porte:document.getElementById("porte").value,sexo:document.getElementById("sexo").value,foto:document.getElementById("preview").src,
+    informacoes:document.getElementById("informacoes").value.trim(),status:espera?"Em espera":"Cadastrado",criadoEm:new Date().toISOString(),
+    agendamento:"",atraso:false,alertas:[],notificacoes:[],historico:[],mesVaga:mes||"Fila de espera",filaEspera:espera
+  };
+  cadastro.notificacoes.push(espera?"O cadastro foi recebido e está em fila de espera. Você será avisado quando uma vaga for liberada.":"Cadastro recebido com sucesso. Sua vaga foi registrada para "+nomeMes(mes)+".");
+  cadastro.historico.push("Cadastro realizado em "+new Date().toLocaleString("pt-BR"));
+  const cadastros=carregarCadastros();cadastros.push(cadastro);salvarCadastros(cadastros);
+  document.getElementById("protocoloExibido").textContent=cadastro.protocolo;window.ultimoProtocolo=cadastro.protocolo;
+  document.getElementById("modalProtocolo").style.display="flex";
+  this.reset();document.getElementById("preview").style.display="none";
+  document.getElementById("telefones").innerHTML='<div class="telefone-item"><input class="telefone" maxlength="15" placeholder="(00) 00000-0000" inputmode="numeric" required><button type="button" class="btn-vermelho" onclick="removerTelefone(this)">X</button></div>';
+  aplicarMascaraTelefone(document.querySelector(".telefone"));renderizarVagasPublicas();
+});
+
+function copiarProtocolo(){const p=document.getElementById("protocoloExibido").textContent;if(navigator.clipboard)navigator.clipboard.writeText(p).then(()=>alert("Protocolo copiado!\n\nGuarde esse número.")).catch(()=>alert("Seu protocolo é:\n\n"+p));else alert("Seu protocolo é:\n\n"+p)}
+function fecharProtocolo(){document.getElementById("modalProtocolo").style.display="none"}
+function fecharModais(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none")}
+function irAreaDonoDepoisCadastro(){fecharProtocolo();abrirDono()}
+function abrirDono(){fecharModais();document.getElementById("modalDono").style.display="flex"}
+function loginDono(){
+  const nome=document.getElementById("loginNome").value.trim(),protocolo=document.getElementById("loginProtocolo").value.trim().toUpperCase();
+  const c=carregarCadastros().map(normalizarCadastro).find(x=>String(x.protocolo).toUpperCase()===protocolo&&x.dono.toLowerCase()===nome.toLowerCase());
+  if(!c){alert("Não encontramos esse cadastro.\n\nConfira o nome informado e o protocolo.");return}
+  fecharModais();mostrarAreaDono(c);
+}
+function mostrarAreaDono(cadastro){
+  document.getElementById("areaDono").style.display="block";
+  const animais=carregarCadastros().map(normalizarCadastro).filter(c=>c.dono.toLowerCase()===cadastro.dono.toLowerCase()).sort((a,b)=>a.animal.localeCompare(b.animal,"pt-BR"));
+  document.getElementById("dadosDono").innerHTML='<div class="info-box"><h3>Olá, '+escapeHTML(cadastro.dono)+'! 🐾</h3><p style="margin-top:8px">Aqui você pode acompanhar todos os animais cadastrados em seu nome.</p></div>'+animais.map(criarCardDono).join("");
+  document.getElementById("areaDono").scrollIntoView({behavior:"smooth"});
+}
+function criarCardDono(c){
+  let n=(c.notificacoes||[]).map(x=>'<div class="notificacao-dono">📢 '+escapeHTML(x)+'</div>').join("");
+  return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>'+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+(c.agendamento?'<p><strong>Agendamento:</strong> '+escapeHTML(c.agendamento)+'</p>':"")+a+n+'</div></div>';
+}
+function sairDono(){document.getElementById("areaDono").style.display="none";window.scrollTo({top:0,behavior:"smooth"})}
+
+function carregarProfissionais(){try{const d=JSON.parse(localStorage.getItem("profissionais")||"[]");return Array.isArray(d)?d:[]}catch(e){return[]}}
+function salvarProfissionais(d){localStorage.setItem("profissionais",JSON.stringify(d))}
+function iniciarProfissionais(){
+  let l=carregarProfissionais();
+  if(!l.some(p=>p.login==="grazi"))l.push({nome:"Grazi",login:"grazi",senha:"castra@pet",administrador:true,permissoes:{cadastrar:true,editar:true,site:true}});
+  if(!l.some(p=>p.login==="eduarda.migliani"))l.push({nome:"Eduarda Migliani",login:"eduarda.migliani",senha:"castra@pet",administrador:false,permissoes:{cadastrar:true,editar:true,site:false}});
+  salvarProfissionais(l);
+}
+iniciarProfissionais();
+
+function abrirModerador(){fecharModais();document.getElementById("modalModerador").style.display="flex"}
+function loginModerador(){
+  const usuario=document.getElementById("usuario").value.trim(),senha=document.getElementById("senha").value;
+  const p=carregarProfissionais().find(x=>x.login===usuario&&x.senha===senha);
+  if(!p){alert("Login ou senha incorretos.");return}
+  window.profissionalLogada=p;fecharModais();document.getElementById("moderador").style.display="block";
+  document.getElementById("gerenciador").style.display=p.administrador?"block":"none";
+  const mural=carregarConfiguracao().mural||"";document.getElementById("editorMural").value=mural;
+  renderizarModerador();renderizarProfissionais();renderizarVagasModerador();document.getElementById("moderador").scrollIntoView({behavior:"smooth"});
+}
+function sairModerador(){window.profissionalLogada=null;document.getElementById("moderador").style.display="none";window.scrollTo({top:0,behavior:"smooth"})}
+
+function renderizarModerador(){
+  let cad=carregarCadastros().map(normalizarCadastro),nome=(document.getElementById("filtroNome")?.value||"").toLowerCase(),cpf=(document.getElementById("filtroCpf")?.value||"").replace(/\D/g,""),status=document.getElementById("filtroStatus")?.value||"";
+  cad=cad.filter(c=>(!nome||c.dono.toLowerCase().includes(nome)||c.animal.toLowerCase().includes(nome))&&(!cpf||c.cpf.replace(/\D/g,"").includes(cpf))&&(!status||c.status===status));
+  const grupos={};cad.sort((a,b)=>a.dono.localeCompare(b.dono,"pt-BR")||a.animal.localeCompare(b.animal,"pt-BR")).forEach(c=>{const k=c.dono.toLowerCase();if(!grupos[k])grupos[k]={dono:c.dono,animais:[]};grupos[k].animais.push(c)});
+  let html=Object.values(grupos).map(g=>'<div class="grupo-tutor"><div class="titulo-tutor" onclick="minimizarTutor(this)"><div><h2>👤 '+escapeHTML(g.dono)+'</h2><p>'+g.animais.length+' animal(is) cadastrado(s)</p></div><span class="seta">▼</span></div><div class="animais-tutor">'+g.animais.map(criarCardModerador).join("")+'</div></div>').join("");
+  if(!html)html='<div class="card">Nenhum cadastro encontrado.</div>';
+  document.getElementById("listaModerador").innerHTML=html;atualizarContadores();renderizarHistorico();
+}
+function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
+
+function criarCardModerador(c){
+  const alertas=(c.alertas||[]).map(a=>"<li>"+escapeHTML(a)+"</li>").join("");
+  return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>🐾 '+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>CPF:</strong> '+escapeHTML(c.cpf)+'</p><p><strong>Telefone(s):</strong> '+c.telefones.map(escapeHTML).join(" · ")+'</p><p><strong>E-mail:</strong> '+escapeHTML(c.email)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Raça:</strong> '+escapeHTML(c.raca)+'</p><p><strong>Cor:</strong> '+escapeHTML(c.cor)+'</p><p><strong>Peso:</strong> '+escapeHTML(c.peso)+' kg</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Porte:</strong> '+escapeHTML(c.porte)+'</p><p><strong>Sexo:</strong> '+escapeHTML(c.sexo)+'</p>'+(c.informacoes?'<p><strong>Informações:</strong> '+escapeHTML(c.informacoes)+'</p>':"")+'<p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+'<div class="acoes"><button class="btn" onclick="alterarStatus(\''+c.protocolo+'\')">Alterar status</button><button class="btn-amarelo" onclick="agendar(\''+c.protocolo+'\')">Agendar</button><button class="btn-verde" onclick="marcarRealizado(\''+c.protocolo+'\')">✓ Realizado</button><button class="btn" onclick="editarMensagens(\''+c.protocolo+'\')">✏️ Editar mensagens</button><button class="btn-cinza" onclick="cancelarCadastro(\''+c.protocolo+'\')">Cancelar vaga</button></div></div></div>';
+}
+
+function atualizarCadastro(protocolo,fn){
+  const c=carregarCadastros().map(normalizarCadastro),i=c.findIndex(x=>x.protocolo===protocolo);if(i<0){alert("Cadastro não encontrado.");return}
+  c[i]=fn(c[i]);salvarCadastros(c);renderizarModerador();renderizarVagasPublicas();renderizarVagasModerador();
+}
+function alterarStatus(protocolo){
+  const novo=prompt("Digite o novo status:\n\nCadastrado\nAprovado\nAgendado\nRealizado\nRecusado\nNecessita correção\nEm espera");if(!novo)return;
+  const permitidos=["Cadastrado","Aprovado","Agendado","Realizado","Recusado","Necessita correção","Em espera"];if(!permitidos.includes(novo)){alert("Status inválido.");return}
+  atualizarCadastro(protocolo,c=>{c.status=novo;c.filaEspera=novo==="Em espera";c.historico.push("Status alterado para "+novo+" em "+new Date().toLocaleString("pt-BR"));c.notificacoes.push("Seu cadastro foi atualizado para: "+novo);return c});
+}
+function agendar(protocolo){
+  const data=prompt("Digite a data e horário do atendimento:");if(!data)return;
+  atualizarCadastro(protocolo,c=>{c.status="Agendado";c.agendamento=data;c.notificacoes.push("Seu atendimento foi agendado para: "+data);c.historico.push("Agendamento realizado em "+new Date().toLocaleString("pt-BR"));return c});
+}
+function marcarRealizado(protocolo){
+  if(!confirm("Confirmar que a castração foi realizada?"))return;
+  atualizarCadastro(protocolo,c=>{c.status="Realizado";c.atraso=false;c.notificacoes.push("A castração do seu animal foi realizada com sucesso.");c.historico.push("Castração realizada em "+new Date().toLocaleString("pt-BR"));return c});
+}
+function cancelarCadastro(protocolo){
+  const c=carregarCadastros().map(normalizarCadastro),item=c.find(x=>x.protocolo===protocolo);if(!item)return;
+  if(!confirm("Cancelar a vaga deste cadastro? A vaga poderá ser usada pelo próximo cadastro em espera."))return;
+  const mes=item.mesVaga;item.status="Recusado";item.filaEspera=false;item.notificacoes.push("Seu cadastro foi cancelado. Entre em contato com a equipe para mais informações.");item.historico.push("Cadastro cancelado em "+new Date().toLocaleString("pt-BR"));
+  salvarCadastros(c);if(mes&&!mes.includes("Fila"))atualizarFilaAposCancelamento(mes);renderizarModerador();renderizarVagasPublicas();renderizarVagasModerador();
+}
+function atualizarContadores(){
+  const c=carregarCadastros().map(normalizarCadastro);
+  document.getElementById("qtdCadastros").textContent=c.length;
+  document.getElementById("qtdPendentes").textContent=c.filter(x=>x.status==="Cadastrado"||x.status==="Aprovado").length;
+  document.getElementById("qtdEspera").textContent=c.filter(x=>x.filaEspera||x.status==="Em espera").length;
+}
+function renderizarHistorico(){
+  const feitos=carregarCadastros().filter(c=>c.status==="Realizado").sort((a,b)=>new Date(b.criadoEm)-new Date(a.criadoEm));
+  document.getElementById("historico").innerHTML=feitos.length?feitos.map(c=>'<div class="historico-item"><strong>'+escapeHTML(c.animal)+'</strong> — tutor: '+escapeHTML(c.dono)+' — '+new Date(c.criadoEm).toLocaleDateString("pt-BR")+'</div>').join(""):"<p>Nenhum atendimento realizado anteriormente.</p>";
+}
+
+function salvarMural(){
+  const p=window.profissionalLogada;if(!p||(!p.administrador&&!p.permissoes?.respostas&&!p.permissoes?.site)){alert("Você não possui permissão para editar o mural.");return}
+  const texto=document.getElementById("editorMural").value.trim(),c=carregarConfiguracao();c.mural=texto;c.muralData=texto?new Date().toLocaleString("pt-BR"):"";salvarConfiguracao(c);renderizarMural();alert(texto?"Mural atualizado e fixado no topo.":"Mural apagado.");
+}
+function renderizarMural(){const c=carregarConfiguracao();document.getElementById("muralTexto").textContent=c.mural||"Nenhum aviso publicado no momento.";document.getElementById("muralData").textContent=c.muralData?(("Última atualização: ")+c.muralData):""}
+function salvarLimiteVagas(){
+  const mes=document.getElementById("mesVagas").value,limite=Number(document.getElementById("limiteVagas").value);
+  if(!mes||limite<0){alert("Informe o mês e um limite válido.");return}
+  const c=carregarConfiguracao();c.limites=c.limites||{};c.limites[mes]=limite;salvarConfiguracao(c);renderizarVagasPublicas();renderizarVagasModerador();alert("Limite de "+limite+" vagas salvo para "+nomeMes(mes)+".");
+}
+function renderizarVagasPublicas(){
+  const meses=[];let m=mesAtual();for(let i=0;i<6;i++){meses.push(m);m=proximoMes(m)}
+  document.getElementById("vagasPublicas").innerHTML='<div class="vagas-grid">'+meses.map(m=>{const lim=limiteDoMes(m),q=quantidadeMes(m),fech=q>=lim;return '<div class="vaga-mes"><strong>'+q+"/"+lim+'</strong><p style="margin:6px 0 8px;text-transform:capitalize">'+escapeHTML(nomeMes(m))+'</p><span class="badge '+(fech?"fechada":"")+'">'+(fech?"Vagas encerradas":"Vagas disponíveis")+'</span></div>'}).join("")+'</div><p style="margin-top:12px;color:#666">Cadastros feitos quando um mês estiver cheio são encaminhados automaticamente para o próximo mês disponível.</p>';
+}
+function renderizarVagasModerador(){
+  const meses=[];let m=mesAtual();for(let i=0;i<12;i++){meses.push(m);m=proximoMes(m)}
+  document.getElementById("vagasModerador").innerHTML=meses.map(m=>{const lim=limiteDoMes(m),q=quantidadeMes(m);return '<div class="vaga-mes" style="margin-bottom:8px"><strong>'+q+"/"+lim+'</strong> — <span style="text-transform:capitalize">'+escapeHTML(nomeMes(m))+'</span> '+(q>=lim?'<span class="badge fechada">FECHADO</span>':'<span class="badge">ABERTO</span>')+'</div>'}).join("");
+}
+
+function criarProfissional(){
+  const atual=window.profissionalLogada;if(!atual?.administrador){alert("Somente o administrador pode cadastrar profissionais.");return}
+  const nome=document.getElementById("novoProfNome").value.trim(),login=document.getElementById("novoProfLogin").value.trim(),senha=document.getElementById("novoProfSenha").value;
+  if(!nome||!login||!senha){alert("Preencha nome, login e senha.");return}
+  const l=carregarProfissionais();if(l.some(p=>p.login===login)){alert("Esse login já existe.");return}
+  l.push({nome,login,senha,administrador:false,permissoes:{cadastrar:document.getElementById("permCadastro").checked,editar:document.getElementById("permEditar").checked,site:document.getElementById("permSite").checked}});
+  salvarProfissionais(l);["novoProfNome","novoProfLogin","novoProfSenha"].forEach(id=>document.getElementById(id).value="");renderizarProfissionais();alert("Profissional cadastrada com sucesso!");
+}
+function editarSenhaProfissional(login){
+  const atual=window.profissionalLogada;
+  if(!atual?.administrador){alert("Somente o administrador pode alterar senhas.");return}
+  const l=carregarProfissionais(),p=l.find(x=>x.login===login);
+  if(!p)return;
+  const nova=prompt("Digite a nova senha para "+p.nome+":");
+  if(nova===null)return;
+  if(!nova.trim()){alert("A senha não pode ficar vazia.");return}
+  p.senha=nova.trim();
+  salvarProfissionais(l);
+  renderizarProfissionais();
+  alert("Senha alterada com sucesso.");
+}
+
+function excluirProfissional(login){
+  const atual=window.profissionalLogada;
+  if(!atual?.administrador){alert("Somente o administrador pode excluir profissionais.");return}
+  const l=carregarProfissionais(),p=l.find(x=>x.login===login);
+  if(!p)return;
+  if(p.administrador){alert("O administrador principal não pode ser excluído.");return}
+  if(!confirm("Excluir o cadastro da profissional "+p.nome+"?"))return;
+  salvarProfissionais(l.filter(x=>x.login!==login));
+  renderizarProfissionais();
+  alert("Cadastro da profissional excluído.");
+}
+
+function renderizarProfissionais(){
+  const div=document.getElementById("listaProfissionais"),l=carregarProfissionais();
+  div.innerHTML=l.map(p=>'<div class="profissional"><h3>'+escapeHTML(p.nome)+'</h3><p><strong>Login:</strong> '+escapeHTML(p.login)+'</p><p><strong>Tipo:</strong> '+(p.administrador?"Administrador":"Profissional")+'</p>'+(p.administrador?'<p style="color:#666">Administrador principal</p>':'<div class="acoes"><button class="btn-amarelo" onclick="editarSenhaProfissional(\''+escapeHTML(p.login)+'\')">🔑 Editar senha</button><button class="btn-vermelho" onclick="excluirProfissional(\''+escapeHTML(p.login)+'\')">🗑️ Excluir profissional</button></div>')+'</div>').join("");
+}
+
+function exportarCSV(){
+  const c=carregarCadastros().map(normalizarCadastro),linhas=[["Protocolo","Responsável","CPF","Telefone","Animal","Espécie","Status","Mês da vaga"]];
+  c.forEach(x=>linhas.push([x.protocolo,x.dono,x.cpf,x.telefones.join(" / "),x.animal,x.especie,x.status,x.filaEspera?"Fila de espera":nomeMes(x.mesVaga)]));
+  const csv=linhas.map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\n"),blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cadastros-castrapet.csv";a.click();URL.revokeObjectURL(a.href);
+}
+
+function inicio(){window.scrollTo({top:0,behavior:"smooth"})}
+function irCadastro(){document.getElementById("cadastro").scrollIntoView({behavior:"smooth"})}
+
+document.addEventListener("click",e=>{
+  if(e.target.classList.contains("modal"))e.target.style.display="none";
+});
+document.addEventListener("DOMContentLoaded",()=>{renderizarMural();renderizarVagasPublicas()});
+</script>
+</body>
+</html>
