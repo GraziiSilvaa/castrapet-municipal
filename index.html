@@ -383,7 +383,7 @@ function mostrarAreaDono(cadastro){
 }
 function criarCardDono(c){
   let n=(c.notificacoes||[]).map(x=>'<div class="notificacao-dono">📢 '+escapeHTML(x)+'</div>').join("");
-  return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>'+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+(c.agendamento?'<p><strong>Agendamento:</strong> '+escapeHTML(c.agendamento)+'</p>':"")+a+n+'</div></div>';
+  return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>'+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+(c.agendamento?'<p><strong>Agendamento:</strong> '+escapeHTML(c.agendamento)+'</p>':"")+n+'</div></div>';
 }
 function sairDono(){document.getElementById("areaDono").style.display="none";window.scrollTo({top:0,behavior:"smooth"})}
 
