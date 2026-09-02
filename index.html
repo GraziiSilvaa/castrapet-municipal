@@ -251,8 +251,15 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
     <button class="btn-cinza" style="margin-top:8px" onclick="fecharProtocolo()">Fechar</button>
   </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  const SUPABASE_URL = "https://fidfdqcynzsfnzykthbu.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9maQvCvuhay-8-zFlkaCQ_AK3eOaWb";";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
 const NUMERO_WHATSAPP="5511999999999";
 document.getElementById("whatsapp").href="https://wa.me/"+NUMERO_WHATSAPP+"?text="+encodeURIComponent("Olá! Tenho uma dúvida sobre o programa de castração.");
 
