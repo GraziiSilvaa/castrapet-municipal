@@ -211,7 +211,7 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
       <div class="profissional">
         <h3>Cadastrar profissional</h3>
         <input type="text" id="novoProfNome" placeholder="Nome da profissional">
-        <input type="text" id="novoProfLogin" placeholder="Login">
+       <input type="email" id="novoProfLogin" placeholder="E-mail da profissional">
         <input type="password" id="novoProfSenha" placeholder="Senha">
         <div class="permissoes">
           <label><input type="checkbox" id="permCadastro" checked> Cadastrar profissionais</label>
@@ -229,9 +229,24 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
 
 <div class="modal" id="modalDono">
   <div class="modal-box"><h2>Área do responsável</h2>
-    <p style="margin-bottom:15px">Informe o nome usado no cadastro e o protocolo recebido.</p>
-    <input id="loginNome" placeholder="Nome do responsável"><input id="loginProtocolo" placeholder="Ex.: PET-2026-123456">
-    <button class="btn" onclick="loginDono()">Entrar</button><button class="btn-cinza" onclick="fecharModais()">Cancelar</button>
+  <p style="margin-bottom:15px">
+  Informe o CPF usado no cadastro e o protocolo recebido.
+</p>
+
+<input
+  id="loginCpf"
+  maxlength="14"
+  placeholder="000.000.000-00"
+  inputmode="numeric"
+>
+
+<input
+  id="loginProtocolo"
+  placeholder="Ex.: PET-2026-123456"
+>
+
+<button class="btn" onclick="loginDono()">Entrar</button>
+<button class="btn-cinza" onclick="fecharModais()">Cancelar</button>
   </div>
 </div>
 
@@ -246,7 +261,7 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   <div class="modal-box" style="text-align:center"><h2>Cadastro realizado! 🐾</h2>
     <p>O cadastro do seu animal foi salvo com sucesso.</p>
     <div class="protocolo-box"><p>Seu protocolo:</p><div id="protocoloExibido" class="protocolo"></div><button class="btn" onclick="copiarProtocolo()">📋 Copiar protocolo</button></div>
-    <p><strong>Guarde esse protocolo.</strong><br>Ele será usado junto com seu nome para acompanhar o cadastro.</p>
+    <p><strong>Guarde esse protocolo.</strong><br>Ele será usado junto com seu CPF para acompanhar o cadastro.</p>
     <button class="btn-verde" style="margin-top:15px" onclick="irAreaDonoDepoisCadastro()">🔎 Acompanhar agora</button>
     <button class="btn-cinza" style="margin-top:8px" onclick="fecharProtocolo()">Fechar</button>
   </div>
@@ -268,18 +283,117 @@ const NUMERO_WHATSAPP="5511999999999";
 document.getElementById("whatsapp").href="https://wa.me/"+NUMERO_WHATSAPP+"?text="+encodeURIComponent("Olá! Tenho uma dúvida sobre o programa de castração.");
 
 const LIMITE_PADRAO=50;
+// ================================
+// SUPABASE - CADASTROS
+// ================================
 
-function carregarCadastros(){try{const d=JSON.parse(localStorage.getItem("cadastros")||"[]");return Array.isArray(d)?d:[]}catch(e){return[]}}
-function salvarCadastros(d){localStorage.setItem("cadastros",JSON.stringify(d))}
-function carregarConfiguracao(){try{return JSON.parse(localStorage.getItem("configCastraPet")||"{}")}catch(e){return{}}}
-function salvarConfiguracao(c){localStorage.setItem("configCastraPet",JSON.stringify(c))}
+async function carregarCadastros() {
+  const { data, error } = await supabaseClient
+    .from("cadastro")
+    .select("*")
+    .order("criado_em", { ascending: false });
+
+  if (error) {
+    console.error("Erro ao carregar cadastros:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+
+async function buscarCadastroPorProtocolo(protocolo) {
+  const { data, error } = await supabaseClient
+    .from("cadastro")
+    .select("*")
+    .eq("protocolo", protocolo)
+    .single();
+
+  if (error) {
+    console.error(error);
+    return null;
+  }
+
+  return data;
+}
+
+
+// ================================
+// SUPABASE - VAGAS
+// ================================
+
+async function carregarVagas() {
+
+  const { data, error } = await supabaseClient
+    .from("vagas")
+    .select("*");
+
+  if (error) {
+    console.error("Erro ao carregar vagas:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+
+// ================================
+// SUPABASE - MURAL
+// ================================
+
+async function carregarMural() {
+
+  const { data, error } = await supabaseClient
+    .from("mural")
+    .select("*")
+    .eq("ativo", true)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Erro ao carregar mural:", error);
+    return null;
+  }
+
+  return data && data.length ? data[0] : null;
+}
 function normalizarCadastro(c){
-  c.telefones=c.telefones||((c.telefone)?[c.telefone]:[]);
-  c.notificacoes=c.notificacoes||[]; c.historico=c.historico||[];
-  c.status=c.status||"Cadastrado"; c.criadoEm=c.criadoEm||new Date().toISOString();
-  c.mesVaga=c.mesVaga||mesAtual();
-    c.filaEspera=!!c.filaEspera;
-  return c;
+
+  return {
+    ...c,
+
+    telefones:
+      Array.isArray(c.telefones)
+        ? c.telefones
+        : c.telefones
+          ? String(c.telefones)
+              .split(" / ")
+              .filter(Boolean)
+          : [],
+
+    notificacoes: c.notificacoes || [],
+    historico: c.historico || [],
+    alertas: c.alertas || [],
+
+    status: c.status || "Cadastrado",
+
+    criadoEm:
+      c.criado_em ||
+      c.criadoEm ||
+      new Date().toISOString(),
+
+    mesVaga:
+      c.mes_vaga ||
+      c.mesVaga ||
+      mesAtual(),
+
+    filaEspera:
+      Boolean(
+        c.fila_espera ??
+        c.filaEspera
+      )
+  };
+
 }
 function escapeHTML(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
@@ -298,7 +412,13 @@ function mascaraTelefone(v){
   return x;
 }
 document.getElementById("cpf").addEventListener("input",e=>e.target.value=mascaraCPF(e.target.value));
-function aplicarMascaraTelefone(input){input.addEventListener("input",e=>e.target.value=mascaraTelefone(e.target.value))}
+document
+  .getElementById("loginCpf")
+  .addEventListener(
+    "input",
+    e => e.target.value = mascaraCPF(e.target.value)
+  );
+  function aplicarMascaraTelefone(input){input.addEventListener("input",e=>e.target.value=mascaraTelefone(e.target.value))}
 document.querySelectorAll(".telefone").forEach(aplicarMascaraTelefone);
 
 function adicionarTelefone(){
@@ -317,95 +437,351 @@ document.getElementById("foto").addEventListener("change",function(){
   const r=new FileReader(); r.onload=e=>{const p=document.getElementById("preview");p.src=e.target.result;p.style.display="block"};r.readAsDataURL(f);
 });
 
-function gerarProtocolo(){return"PET-2026-"+Date.now().toString().slice(-6)}
+function gerarProtocolo(){
+  const agora = Date.now().toString().slice(-6);
+  const aleatorio = Math.floor(
+    100 + Math.random() * 900
+  );
+
+  return "PET-2026-" + agora + aleatorio;
+}
 function mesAtual(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function nomeMes(mes){const [a,m]=mes.split("-");return new Date(Number(a),Number(m)-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}
 function proximoMes(mes){const [a,m]=mes.split("-").map(Number);const d=new Date(a,m,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 
-function limiteDoMes(mes){
-  const c=carregarConfiguracao(); return c.limites && Object.prototype.hasOwnProperty.call(c.limites,mes) ? Number(c.limites[mes]) : LIMITE_PADRAO;
-}
-function quantidadeMes(mes){
-  return carregarCadastros().filter(c=>normalizarCadastro(c).mesVaga===mes && !c.filaEspera && c.status!=="Recusado").length;
-}
-function encontrarMesDisponivel(inicio){
-  let mes=inicio||mesAtual();
-  for(let i=0;i<24;i++){
-    if(quantidadeMes(mes)<limiteDoMes(mes))return mes;
-    mes=proximoMes(mes);
+async function limiteDoMes(mes){
+
+  const { data, error } = await supabaseClient
+    .from("vagas")
+    .select("limite")
+    .eq("mes", mes)
+    .single();
+
+  if(error || !data){
+    return LIMITE_PADRAO;
   }
+
+  return Number(data.limite);
+}
+async function quantidadeMes(mes){
+
+  const { count, error } =
+    await supabaseClient
+      .from("cadastro")
+      .select(
+        "*",
+        {
+          count: "exact",
+          head: true
+        }
+      )
+      .eq("mes_vaga", mes)
+      .eq("fila_espera", false)
+      .neq("status", "Recusado");
+
+  if(error){
+
+    console.error(
+      "Erro ao contar vagas:",
+      error
+    );
+
+    return 0;
+
+  }
+
+  return count || 0;
+
+}
+async function encontrarMesDisponivel(inicio){
+
+  let mes = inicio || mesAtual();
+
+  for(let i = 0; i < 24; i++){
+
+    const quantidade =
+      await quantidadeMes(mes);
+
+    const limite =
+      await limiteDoMes(mes);
+
+    if(quantidade < limite){
+      return mes;
+    }
+
+    mes = proximoMes(mes);
+  }
+
   return null;
 }
-function atualizarFilaAposCancelamento(mes){
-  const cad=carregarCadastros().map(normalizarCadastro);
-  const espera=cad.filter(c=>c.filaEspera).sort((a,b)=>new Date(a.criadoEm)-new Date(b.criadoEm));
-  if(!espera.length)return;
-  const vaga=espera.find(c=>quantidadeMes(mes)<limiteDoMes(mes));
-  if(vaga){
-    vaga.filaEspera=false; vaga.mesVaga=mes; vaga.status="Cadastrado";
-    vaga.notificacoes.push("Uma vaga foi liberada e seu cadastro entrou no mês de "+nomeMes(mes)+".");
-    vaga.historico.push("Vaga liberada da fila de espera em "+new Date().toLocaleString("pt-BR"));
-    salvarCadastros(cad);
+async function atualizarFilaAposCancelamento(mes){
+
+  const cadastros =
+    (await carregarCadastros())
+    .map(normalizarCadastro);
+
+  const quantidade =
+    await quantidadeMes(mes);
+
+  const limite =
+    await limiteDoMes(mes);
+
+  if(quantidade >= limite){
+    return;
   }
+
+  const espera = cadastros
+    .filter(c => c.filaEspera)
+    .sort(
+      (a, b) =>
+        new Date(a.criadoEm) -
+        new Date(b.criadoEm)
+    );
+
+  if(!espera.length){
+    return;
+  }
+
+  const vaga = espera[0];
+
+  const notificacoes =
+    vaga.notificacoes || [];
+
+  notificacoes.push(
+    "Uma vaga foi liberada e seu cadastro entrou no mês de " +
+    nomeMes(mes) +
+    "."
+  );
+
+  const historico =
+    vaga.historico || [];
+
+  historico.push(
+    "Vaga liberada da fila de espera em " +
+    new Date().toLocaleString("pt-BR")
+  );
+
+  const { error } =
+    await supabaseClient
+      .from("cadastro")
+      .update({
+        fila_espera: false,
+        mes_vaga: mes,
+        status: "Cadastrado",
+        notificacoes: notificacoes,
+        historico: historico
+      })
+      .eq("protocolo", vaga.protocolo);
+
+  if(error){
+    console.error(error);
+  }
+
 }
-
-document.getElementById("formCadastro").addEventListener("submit",function(e){
+document.getElementById("formCadastro").addEventListener("submit", async function(e){
   e.preventDefault();
-  const mes=encontrarMesDisponivel(mesAtual());
-  const espera=!mes;
-  const telefones=Array.from(document.querySelectorAll(".telefone")).map(i=>i.value.trim()).filter(Boolean);
-  const cadastro={
-    id:Date.now(),protocolo:gerarProtocolo(),
-    dono:document.getElementById("dono").value.trim(),cpf:document.getElementById("cpf").value.trim(),telefones,
-    email:document.getElementById("email").value.trim(),animal:document.getElementById("animal").value.trim(),
-    especie:document.getElementById("especie").value,raca:document.getElementById("raca").value.trim(),cor:document.getElementById("cor").value.trim(),
-    peso:document.getElementById("peso").value,idade:document.getElementById("idade").value+" "+document.getElementById("idadeTipo").value,
-    porte:document.getElementById("porte").value,sexo:document.getElementById("sexo").value,foto:document.getElementById("preview").src,
-    informacoes:document.getElementById("informacoes").value.trim(),status:espera?"Em espera":"Cadastrado",criadoEm:new Date().toISOString(),
-    agendamento:"",atraso:false,alertas:[],notificacoes:[],historico:[],mesVaga:mes||"Fila de espera",filaEspera:espera
-  };
-  cadastro.notificacoes.push(espera?"O cadastro foi recebido e está em fila de espera. Você será avisado quando uma vaga for liberada.":"Cadastro recebido com sucesso. Sua vaga foi registrada para "+nomeMes(mes)+".");
-  cadastro.historico.push("Cadastro realizado em "+new Date().toLocaleString("pt-BR"));
-  const cadastros=carregarCadastros();cadastros.push(cadastro);salvarCadastros(cadastros);
-  document.getElementById("protocoloExibido").textContent=cadastro.protocolo;window.ultimoProtocolo=cadastro.protocolo;
-  document.getElementById("modalProtocolo").style.display="flex";
-  this.reset();document.getElementById("preview").style.display="none";
-  document.getElementById("telefones").innerHTML='<div class="telefone-item"><input class="telefone" maxlength="15" placeholder="(00) 00000-0000" inputmode="numeric" required><button type="button" class="btn-vermelho" onclick="removerTelefone(this)">X</button></div>';
-  aplicarMascaraTelefone(document.querySelector(".telefone"));renderizarVagasPublicas();
-});
 
+  const telefones = Array.from(
+    document.querySelectorAll(".telefone")
+  )
+  .map(i => i.value.trim())
+  .filter(Boolean);
+
+  const protocolo = gerarProtocolo();
+
+  const idade =
+    document.getElementById("idade").value +
+    " " +
+    document.getElementById("idadeTipo").value;
+  const mesDisponivel =
+  await encontrarMesDisponivel(mesAtual());
+
+let emEspera = false;
+let mesDaVaga = mesDisponivel;
+
+if(!mesDisponivel){
+  emEspera = true;
+  mesDaVaga = mesAtual();
+}
+  const novoCadastro = {
+    protocolo: protocolo,
+    dono: document.getElementById("dono").value.trim(),
+    cpf: document.getElementById("cpf").value.trim(),
+    telefones: telefones.join(" / "),
+    email: document.getElementById("email").value.trim(),
+    animal: document.getElementById("animal").value.trim(),
+    especie: document.getElementById("especie").value,
+    raca: document.getElementById("raca").value.trim(),
+    cor: document.getElementById("cor").value.trim(),
+    peso: document.getElementById("peso").value,
+    idade: idade,
+    porte: document.getElementById("porte").value,
+    sexo: document.getElementById("sexo").value,
+    foto: document.getElementById("preview").src || null,
+    informacoes: document.getElementById("informacoes").value.trim(),
+   status: emEspera ? "Em espera" : "Cadastrado",
+   mes_vaga: mesDaVaga,
+  fila_espera: emEspera,
+    agendamento: null,
+    atraso: false
+  };
+
+  const { data, error } = await supabaseClient
+    .from("cadastro")
+    .insert([novoCadastro])
+    .select()
+    .single();
+
+  if(error){
+    console.error(error);
+    alert(
+      "Erro ao salvar o cadastro: " +
+      error.message
+    );
+    return;
+  }
+
+  document.getElementById("protocoloExibido").textContent =
+    protocolo;
+
+  window.ultimoProtocolo = protocolo;
+
+  document.getElementById("modalProtocolo").style.display =
+    "flex";
+
+  this.reset();
+
+  document.getElementById("preview").style.display =
+    "none";
+
+  document.getElementById("telefones").innerHTML =
+    `<div class="telefone-item">
+      <input class="telefone"
+        maxlength="15"
+        placeholder="(00) 00000-0000"
+        inputmode="numeric"
+        required>
+
+      <button
+        type="button"
+        class="btn-vermelho"
+        onclick="removerTelefone(this)">
+        X
+      </button>
+    </div>`;
+
+  aplicarMascaraTelefone(
+    document.querySelector(".telefone")
+  );
+
+  await renderizarVagasPublicas();
+});
+  
 function copiarProtocolo(){const p=document.getElementById("protocoloExibido").textContent;if(navigator.clipboard)navigator.clipboard.writeText(p).then(()=>alert("Protocolo copiado!\n\nGuarde esse número.")).catch(()=>alert("Seu protocolo é:\n\n"+p));else alert("Seu protocolo é:\n\n"+p)}
 function fecharProtocolo(){document.getElementById("modalProtocolo").style.display="none"}
 function fecharModais(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none")}
 function irAreaDonoDepoisCadastro(){fecharProtocolo();abrirDono()}
 function abrirDono(){fecharModais();document.getElementById("modalDono").style.display="flex"}
-function loginDono(){
-  const nome=document.getElementById("loginNome").value.trim(),protocolo=document.getElementById("loginProtocolo").value.trim().toUpperCase();
-  const c=carregarCadastros().map(normalizarCadastro).find(x=>String(x.protocolo).toUpperCase()===protocolo&&x.dono.toLowerCase()===nome.toLowerCase());
-  if(!c){alert("Não encontramos esse cadastro.\n\nConfira o nome informado e o protocolo.");return}
-  fecharModais();mostrarAreaDono(c);
+async function loginDono(){
+
+  const cpf = document
+    .getElementById("loginCpf")
+    .value
+    .trim();
+
+  const protocolo = document
+    .getElementById("loginProtocolo")
+    .value
+    .trim()
+    .toUpperCase();
+
+  if(!cpf || !protocolo){
+    alert("Informe o CPF e o protocolo.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("cadastro")
+    .select("*")
+    .eq("protocolo", protocolo)
+    .eq("cpf", cpf)
+    .single();
+
+  if(error || !data){
+    console.error(error);
+
+    alert(
+      "Não encontramos esse cadastro.\n\n" +
+      "Confira o CPF e o protocolo."
+    );
+
+    return;
+  }
+
+  fecharModais();
+
+  await mostrarAreaDono(
+    normalizarCadastro(data)
+  );
 }
-function mostrarAreaDono(cadastro){
-  document.getElementById("areaDono").style.display="block";
-  const animais=carregarCadastros().map(normalizarCadastro).filter(c=>c.dono.toLowerCase()===cadastro.dono.toLowerCase()).sort((a,b)=>a.animal.localeCompare(b.animal,"pt-BR"));
-  document.getElementById("dadosDono").innerHTML='<div class="info-box"><h3>Olá, '+escapeHTML(cadastro.dono)+'! 🐾</h3><p style="margin-top:8px">Aqui você pode acompanhar todos os animais cadastrados em seu nome.</p></div>'+animais.map(criarCardDono).join("");
-  document.getElementById("areaDono").scrollIntoView({behavior:"smooth"});
+  async function mostrarAreaDono(cadastro){
+
+  document.getElementById("areaDono").style.display =
+    "block";
+
+ const { data: animais, error } =
+  await supabaseClient
+    .from("cadastro")
+    .select("*")
+    .eq("cpf", cadastro.cpf)
+    .order("animal");
+  if(error){
+    console.error(error);
+
+    alert("Erro ao carregar os animais.");
+
+    return;
+  }
+
+  const animaisNormalizados =
+    (animais || []).map(normalizarCadastro);
+
+  document.getElementById("dadosDono").innerHTML =
+
+    '<div class="info-box">' +
+
+      '<h3>Olá, ' +
+
+      escapeHTML(cadastro.dono) +
+
+      '! 🐾</h3>' +
+
+      '<p style="margin-top:8px">' +
+
+      'Aqui você pode acompanhar todos os animais ' +
+
+      'cadastrados em seu nome.' +
+
+      '</p>' +
+
+    '</div>' +
+
+    animaisNormalizados
+      .map(criarCardDono)
+      .join("");
+
+  document
+    .getElementById("areaDono")
+    .scrollIntoView({
+      behavior:"smooth"
+    });
+
 }
 function criarCardDono(c){
   let n=(c.notificacoes||[]).map(x=>'<div class="notificacao-dono">📢 '+escapeHTML(x)+'</div>').join("");
   return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>'+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+(c.agendamento?'<p><strong>Agendamento:</strong> '+escapeHTML(c.agendamento)+'</p>':"")+n+'</div></div>';
 }
 function sairDono(){document.getElementById("areaDono").style.display="none";window.scrollTo({top:0,behavior:"smooth"})}
-
-function carregarProfissionais(){try{const d=JSON.parse(localStorage.getItem("profissionais")||"[]");return Array.isArray(d)?d:[]}catch(e){return[]}}
-function salvarProfissionais(d){localStorage.setItem("profissionais",JSON.stringify(d))}
-function iniciarProfissionais(){
-  let l=carregarProfissionais();
-  if(!l.some(p=>p.login==="grazi"))l.push({nome:"Grazi",login:"grazi",senha:"castra@pet",administrador:true,permissoes:{cadastrar:true,editar:true,site:true}});
-  if(!l.some(p=>p.login==="eduarda.migliani"))l.push({nome:"Eduarda Migliani",login:"eduarda.migliani",senha:"castra@pet",administrador:false,permissoes:{cadastrar:true,editar:true,site:false}});
-  salvarProfissionais(l);
-}
-iniciarProfissionais();
 
 function abrirModerador(){fecharModais();document.getElementById("modalModerador").style.display="flex"}
 async function loginModerador(){
@@ -457,8 +833,11 @@ async function loginModerador(){
     document.getElementById("gerenciador").style.display =
       profissional.administrador ? "block" : "none";
 
-    const mural = carregarConfiguracao().mural || "";
-    document.getElementById("editorMural").value = mural;
+    const mural = await carregarMural();
+
+document.getElementById(
+  "editorMural"
+).value = mural?.texto || "";
 
     renderizarModerador();
     renderizarProfissionais();
@@ -473,23 +852,162 @@ async function loginModerador(){
     alert("Ocorreu um erro ao tentar fazer login.");
   }
 }
-  const usuario=document.getElementById("usuario").value.trim(),senha=document.getElementById("senha").value;
-  const p=carregarProfissionais().find(x=>x.login===usuario&&x.senha===senha);
-  if(!p){alert("Login ou senha incorretos.");return}
-  window.profissionalLogada=p;fecharModais();document.getElementById("moderador").style.display="block";
-  document.getElementById("gerenciador").style.display=p.administrador?"block":"none";
-  const mural=carregarConfiguracao().mural||"";document.getElementById("editorMural").value=mural;
-  renderizarModerador();renderizarProfissionais();renderizarVagasModerador();document.getElementById("moderador").scrollIntoView({behavior:"smooth"});
-}
-function sairModerador(){window.profissionalLogada=null;document.getElementById("moderador").style.display="none";window.scrollTo({top:0,behavior:"smooth"})}
 
-function renderizarModerador(){
-  let cad=carregarCadastros().map(normalizarCadastro),nome=(document.getElementById("filtroNome")?.value||"").toLowerCase(),cpf=(document.getElementById("filtroCpf")?.value||"").replace(/\D/g,""),status=document.getElementById("filtroStatus")?.value||"";
-  cad=cad.filter(c=>(!nome||c.dono.toLowerCase().includes(nome)||c.animal.toLowerCase().includes(nome))&&(!cpf||c.cpf.replace(/\D/g,"").includes(cpf))&&(!status||c.status===status));
-  const grupos={};cad.sort((a,b)=>a.dono.localeCompare(b.dono,"pt-BR")||a.animal.localeCompare(b.animal,"pt-BR")).forEach(c=>{const k=c.dono.toLowerCase();if(!grupos[k])grupos[k]={dono:c.dono,animais:[]};grupos[k].animais.push(c)});
-  let html=Object.values(grupos).map(g=>'<div class="grupo-tutor"><div class="titulo-tutor" onclick="minimizarTutor(this)"><div><h2>👤 '+escapeHTML(g.dono)+'</h2><p>'+g.animais.length+' animal(is) cadastrado(s)</p></div><span class="seta">▼</span></div><div class="animais-tutor">'+g.animais.map(criarCardModerador).join("")+'</div></div>').join("");
-  if(!html)html='<div class="card">Nenhum cadastro encontrado.</div>';
-  document.getElementById("listaModerador").innerHTML=html;atualizarContadores();renderizarHistorico();
+async function sairModerador(){
+  window.profissionalLogada = null;
+
+  await supabaseClient.auth.signOut();
+
+  document.getElementById("moderador").style.display = "none";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+async function renderizarModerador(){
+
+  let cad = await carregarCadastros();
+
+  cad = cad.map(normalizarCadastro);
+
+  const nome = (
+    document.getElementById("filtroNome")?.value || ""
+  ).toLowerCase();
+
+  const cpf = (
+    document.getElementById("filtroCpf")?.value || ""
+  ).replace(/\D/g, "");
+
+  const status =
+    document.getElementById("filtroStatus")?.value || "";
+
+  cad = cad.filter(c => {
+
+    const nomeDono =
+      (c.dono || "").toLowerCase();
+
+    const nomeAnimal =
+      (c.animal || "").toLowerCase();
+
+    const cpfCadastro =
+      (c.cpf || "").replace(/\D/g, "");
+
+    return (
+
+      (!nome ||
+        nomeDono.includes(nome) ||
+        nomeAnimal.includes(nome)
+      ) &&
+
+      (!cpf ||
+        cpfCadastro.includes(cpf)
+      ) &&
+
+      (!status ||
+        c.status === status)
+
+    );
+
+  });
+
+  const grupos = {};
+
+  cad
+    .sort((a, b) =>
+
+      (a.dono || "").localeCompare(
+        b.dono || "",
+        "pt-BR"
+      ) ||
+
+      (a.animal || "").localeCompare(
+        b.animal || "",
+        "pt-BR"
+      )
+
+    )
+
+    .forEach(c => {
+
+      const chave =
+        (c.dono || "").toLowerCase();
+
+      if(!grupos[chave]){
+
+        grupos[chave] = {
+          dono: c.dono,
+          animais: []
+        };
+
+      }
+
+      grupos[chave].animais.push(c);
+
+    });
+
+  let html = Object.values(grupos)
+
+    .map(g => `
+
+      <div class="grupo-tutor">
+
+        <div
+          class="titulo-tutor"
+          onclick="minimizarTutor(this)"
+        >
+
+          <div>
+
+            <h2>
+              👤 ${escapeHTML(g.dono)}
+            </h2>
+
+            <p>
+              ${g.animais.length}
+              animal(is) cadastrado(s)
+            </p>
+
+          </div>
+
+          <span class="seta">
+            ▼
+          </span>
+
+        </div>
+
+        <div class="animais-tutor">
+
+          ${g.animais
+            .map(criarCardModerador)
+            .join("")}
+
+        </div>
+
+      </div>
+
+    `)
+
+    .join("");
+
+  if(!html){
+
+    html = `
+      <div class="card">
+        Nenhum cadastro encontrado.
+      </div>
+    `;
+
+  }
+
+  document.getElementById(
+    "listaModerador"
+  ).innerHTML = html;
+
+  atualizarContadores();
+
+  renderizarHistorico();
+
 }
 function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
 
@@ -498,102 +1016,817 @@ function criarCardModerador(c){
   return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>🐾 '+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>CPF:</strong> '+escapeHTML(c.cpf)+'</p><p><strong>Telefone(s):</strong> '+c.telefones.map(escapeHTML).join(" · ")+'</p><p><strong>E-mail:</strong> '+escapeHTML(c.email)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Raça:</strong> '+escapeHTML(c.raca)+'</p><p><strong>Cor:</strong> '+escapeHTML(c.cor)+'</p><p><strong>Peso:</strong> '+escapeHTML(c.peso)+' kg</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Porte:</strong> '+escapeHTML(c.porte)+'</p><p><strong>Sexo:</strong> '+escapeHTML(c.sexo)+'</p>'+(c.informacoes?'<p><strong>Informações:</strong> '+escapeHTML(c.informacoes)+'</p>':"")+'<p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+'<div class="acoes"><button class="btn" onclick="alterarStatus(\''+c.protocolo+'\')">Alterar status</button><button class="btn-amarelo" onclick="agendar(\''+c.protocolo+'\')">Agendar</button><button class="btn-verde" onclick="marcarRealizado(\''+c.protocolo+'\')">✓ Realizado</button><button class="btn" onclick="editarMensagens(\''+c.protocolo+'\')">✏️ Editar mensagens</button><button class="btn-cinza" onclick="cancelarCadastro(\''+c.protocolo+'\')">Cancelar vaga</button></div></div></div>';
 }
 
-function atualizarCadastro(protocolo,fn){
-  const c=carregarCadastros().map(normalizarCadastro),i=c.findIndex(x=>x.protocolo===protocolo);if(i<0){alert("Cadastro não encontrado.");return}
-  c[i]=fn(c[i]);salvarCadastros(c);renderizarModerador();renderizarVagasPublicas();renderizarVagasModerador();
+async function atualizarCadastro(protocolo, dadosAtualizados){
+
+  const { error } = await supabaseClient
+    .from("cadastro")
+    .update(dadosAtualizados)
+    .eq("protocolo", protocolo);
+
+  if(error){
+    console.error(error);
+    alert("Erro ao atualizar o cadastro: " + error.message);
+    return false;
+  }
+
+  await renderizarModerador();
+  await renderizarVagasPublicas();
+  renderizarVagasModerador();
+
+  return true;
 }
-function alterarStatus(protocolo){
-  const novo=prompt("Digite o novo status:\n\nCadastrado\nAprovado\nAgendado\nRealizado\nRecusado\nNecessita correção\nEm espera");if(!novo)return;
-  const permitidos=["Cadastrado","Aprovado","Agendado","Realizado","Recusado","Necessita correção","Em espera"];if(!permitidos.includes(novo)){alert("Status inválido.");return}
-  atualizarCadastro(protocolo,c=>{c.status=novo;c.filaEspera=novo==="Em espera";c.historico.push("Status alterado para "+novo+" em "+new Date().toLocaleString("pt-BR"));c.notificacoes.push("Seu cadastro foi atualizado para: "+novo);return c});
-}
-function agendar(protocolo){
-  const data=prompt("Digite a data e horário do atendimento:");if(!data)return;
-  atualizarCadastro(protocolo,c=>{c.status="Agendado";c.agendamento=data;c.notificacoes.push("Seu atendimento foi agendado para: "+data);c.historico.push("Agendamento realizado em "+new Date().toLocaleString("pt-BR"));return c});
-}
-function marcarRealizado(protocolo){
-  if(!confirm("Confirmar que a castração foi realizada?"))return;
-  atualizarCadastro(protocolo,c=>{c.status="Realizado";c.atraso=false;c.notificacoes.push("A castração do seu animal foi realizada com sucesso.");c.historico.push("Castração realizada em "+new Date().toLocaleString("pt-BR"));return c});
-}
-function cancelarCadastro(protocolo){
-  const c=carregarCadastros().map(normalizarCadastro),item=c.find(x=>x.protocolo===protocolo);if(!item)return;
-  if(!confirm("Cancelar a vaga deste cadastro? A vaga poderá ser usada pelo próximo cadastro em espera."))return;
-  const mes=item.mesVaga;item.status="Recusado";item.filaEspera=false;item.notificacoes.push("Seu cadastro foi cancelado. Entre em contato com a equipe para mais informações.");item.historico.push("Cadastro cancelado em "+new Date().toLocaleString("pt-BR"));
-  salvarCadastros(c);if(mes&&!mes.includes("Fila"))atualizarFilaAposCancelamento(mes);renderizarModerador();renderizarVagasPublicas();renderizarVagasModerador();
-}
-function atualizarContadores(){
-  const c=carregarCadastros().map(normalizarCadastro);
-  document.getElementById("qtdCadastros").textContent=c.length;
-  document.getElementById("qtdPendentes").textContent=c.filter(x=>x.status==="Cadastrado"||x.status==="Aprovado").length;
-  document.getElementById("qtdEspera").textContent=c.filter(x=>x.filaEspera||x.status==="Em espera").length;
-}
-function renderizarHistorico(){
-  const feitos=carregarCadastros().filter(c=>c.status==="Realizado").sort((a,b)=>new Date(b.criadoEm)-new Date(a.criadoEm));
-  document.getElementById("historico").innerHTML=feitos.length?feitos.map(c=>'<div class="historico-item"><strong>'+escapeHTML(c.animal)+'</strong> — tutor: '+escapeHTML(c.dono)+' — '+new Date(c.criadoEm).toLocaleDateString("pt-BR")+'</div>').join(""):"<p>Nenhum atendimento realizado anteriormente.</p>";
+async function alterarStatus(protocolo){
+
+  const novo = prompt(
+    "Digite o novo status:\n\n" +
+    "Cadastrado\n" +
+    "Aprovado\n" +
+    "Agendado\n" +
+    "Realizado\n" +
+    "Recusado\n" +
+    "Necessita correção\n" +
+    "Em espera"
+  );
+
+  if(!novo) return;
+
+  const permitidos = [
+    "Cadastrado",
+    "Aprovado",
+    "Agendado",
+    "Realizado",
+    "Recusado",
+    "Necessita correção",
+    "Em espera"
+  ];
+
+  if(!permitidos.includes(novo)){
+    alert("Status inválido.");
+    return;
+  }
+
+  await atualizarCadastro(protocolo, {
+    status: novo,
+    fila_espera: novo === "Em espera"
+  });
+
+  alert("Status atualizado com sucesso!");
 }
 
-function salvarMural(){
-  const p=window.profissionalLogada;if(!p||(!p.administrador&&!p.permissoes?.respostas&&!p.permissoes?.site)){alert("Você não possui permissão para editar o mural.");return}
-  const texto=document.getElementById("editorMural").value.trim(),c=carregarConfiguracao();c.mural=texto;c.muralData=texto?new Date().toLocaleString("pt-BR"):"";salvarConfiguracao(c);renderizarMural();alert(texto?"Mural atualizado e fixado no topo.":"Mural apagado.");
-}
-function renderizarMural(){const c=carregarConfiguracao();document.getElementById("muralTexto").textContent=c.mural||"Nenhum aviso publicado no momento.";document.getElementById("muralData").textContent=c.muralData?(("Última atualização: ")+c.muralData):""}
-function salvarLimiteVagas(){
-  const mes=document.getElementById("mesVagas").value,limite=Number(document.getElementById("limiteVagas").value);
-  if(!mes||limite<0){alert("Informe o mês e um limite válido.");return}
-  const c=carregarConfiguracao();c.limites=c.limites||{};c.limites[mes]=limite;salvarConfiguracao(c);renderizarVagasPublicas();renderizarVagasModerador();alert("Limite de "+limite+" vagas salvo para "+nomeMes(mes)+".");
-}
-function renderizarVagasPublicas(){
-  const meses=[];let m=mesAtual();for(let i=0;i<6;i++){meses.push(m);m=proximoMes(m)}
-  document.getElementById("vagasPublicas").innerHTML='<div class="vagas-grid">'+meses.map(m=>{const lim=limiteDoMes(m),q=quantidadeMes(m),fech=q>=lim;return '<div class="vaga-mes"><strong>'+q+"/"+lim+'</strong><p style="margin:6px 0 8px;text-transform:capitalize">'+escapeHTML(nomeMes(m))+'</p><span class="badge '+(fech?"fechada":"")+'">'+(fech?"Vagas encerradas":"Vagas disponíveis")+'</span></div>'}).join("")+'</div><p style="margin-top:12px;color:#666">Cadastros feitos quando um mês estiver cheio são encaminhados automaticamente para o próximo mês disponível.</p>';
-}
-function renderizarVagasModerador(){
-  const meses=[];let m=mesAtual();for(let i=0;i<12;i++){meses.push(m);m=proximoMes(m)}
-  document.getElementById("vagasModerador").innerHTML=meses.map(m=>{const lim=limiteDoMes(m),q=quantidadeMes(m);return '<div class="vaga-mes" style="margin-bottom:8px"><strong>'+q+"/"+lim+'</strong> — <span style="text-transform:capitalize">'+escapeHTML(nomeMes(m))+'</span> '+(q>=lim?'<span class="badge fechada">FECHADO</span>':'<span class="badge">ABERTO</span>')+'</div>'}).join("");
+
+async function agendar(protocolo){
+
+  const data = prompt(
+    "Digite a data e o horário do atendimento:"
+  );
+
+  if(!data) return;
+
+  await atualizarCadastro(protocolo, {
+    status: "Agendado",
+    agendamento: data,
+    fila_espera: false
+  });
+
+  alert("Agendamento realizado com sucesso!");
 }
 
-function criarProfissional(){
-  const atual=window.profissionalLogada;if(!atual?.administrador){alert("Somente o administrador pode cadastrar profissionais.");return}
-  const nome=document.getElementById("novoProfNome").value.trim(),login=document.getElementById("novoProfLogin").value.trim(),senha=document.getElementById("novoProfSenha").value;
-  if(!nome||!login||!senha){alert("Preencha nome, login e senha.");return}
-  const l=carregarProfissionais();if(l.some(p=>p.login===login)){alert("Esse login já existe.");return}
-  l.push({nome,login,senha,administrador:false,permissoes:{cadastrar:document.getElementById("permCadastro").checked,editar:document.getElementById("permEditar").checked,site:document.getElementById("permSite").checked}});
-  salvarProfissionais(l);["novoProfNome","novoProfLogin","novoProfSenha"].forEach(id=>document.getElementById(id).value="");renderizarProfissionais();alert("Profissional cadastrada com sucesso!");
+
+async function marcarRealizado(protocolo){
+
+  if(!confirm(
+    "Confirmar que a castração foi realizada?"
+  )){
+    return;
+  }
+
+  await atualizarCadastro(protocolo, {
+    status: "Realizado",
+    atraso: false
+  });
+
+  alert("Atendimento marcado como realizado!");
 }
-function editarSenhaProfissional(login){
-  const atual=window.profissionalLogada;
-  if(!atual?.administrador){alert("Somente o administrador pode alterar senhas.");return}
-  const l=carregarProfissionais(),p=l.find(x=>x.login===login);
-  if(!p)return;
-  const nova=prompt("Digite a nova senha para "+p.nome+":");
-  if(nova===null)return;
-  if(!nova.trim()){alert("A senha não pode ficar vazia.");return}
-  p.senha=nova.trim();
-  salvarProfissionais(l);
-  renderizarProfissionais();
-  alert("Senha alterada com sucesso.");
+async function cancelarCadastro(protocolo){
+
+  if(!confirm(
+    "Cancelar a vaga deste cadastro?"
+  )){
+    return;
+  }
+
+  const cadastro =
+    await buscarCadastroPorProtocolo(
+      protocolo
+    );
+
+  if(!cadastro){
+    alert(
+      "Cadastro não encontrado."
+    );
+
+    return;
+  }
+
+  const cadastroNormalizado =
+    normalizarCadastro(cadastro);
+
+  const mes =
+    cadastroNormalizado.mesVaga;
+
+  const sucesso =
+    await atualizarCadastro(
+      protocolo,
+      {
+        status: "Recusado",
+        fila_espera: false
+      }
+    );
+
+  if(sucesso){
+
+    await atualizarFilaAposCancelamento(
+      mes
+    );
+
+    await renderizarModerador();
+
+    await renderizarVagasPublicas();
+
+    await renderizarVagasModerador();
+
+    alert(
+      "Cadastro cancelado com sucesso."
+    );
+
+  }
+
+}
+async function atualizarContadores(){
+
+  const cadastros =
+    await carregarCadastros();
+
+  const c =
+    cadastros.map(normalizarCadastro);
+
+  document.getElementById(
+    "qtdCadastros"
+  ).textContent = c.length;
+
+  document.getElementById(
+    "qtdPendentes"
+  ).textContent = c.filter(x =>
+    x.status === "Cadastrado" ||
+    x.status === "Aprovado"
+  ).length;
+
+  document.getElementById(
+    "qtdEspera"
+  ).textContent = c.filter(x =>
+    x.filaEspera ||
+    x.status === "Em espera"
+  ).length;
+
+}
+async function renderizarHistorico(){
+
+  const cadastros =
+    await carregarCadastros();
+
+  const feitos =
+    cadastros
+      .map(normalizarCadastro)
+      .filter(c =>
+        c.status === "Realizado"
+      )
+      .sort((a, b) =>
+        new Date(
+          b.criado_em || b.criadoEm
+        ) -
+        new Date(
+          a.criado_em || a.criadoEm
+        )
+      );
+
+  document.getElementById(
+    "historico"
+  ).innerHTML = feitos.length
+
+    ? feitos.map(c => {
+
+        const data =
+          c.criado_em || c.criadoEm;
+
+        return `
+          <div class="historico-item">
+
+            <strong>
+              ${escapeHTML(c.animal)}
+            </strong>
+
+            — tutor:
+            ${escapeHTML(c.dono)}
+
+            — ${data
+              ? new Date(data)
+                  .toLocaleDateString("pt-BR")
+              : "Data não informada"}
+
+          </div>
+        `;
+
+      }).join("")
+
+    : `
+        <p>
+          Nenhum atendimento realizado anteriormente.
+        </p>
+      `;
+
 }
 
-function excluirProfissional(login){
-  const atual=window.profissionalLogada;
-  if(!atual?.administrador){alert("Somente o administrador pode excluir profissionais.");return}
-  const l=carregarProfissionais(),p=l.find(x=>x.login===login);
-  if(!p)return;
-  if(p.administrador){alert("O administrador principal não pode ser excluído.");return}
-  if(!confirm("Excluir o cadastro da profissional "+p.nome+"?"))return;
-  salvarProfissionais(l.filter(x=>x.login!==login));
-  renderizarProfissionais();
-  alert("Cadastro da profissional excluído.");
-}
+async function salvarMural(){
 
-function renderizarProfissionais(){
-  const div=document.getElementById("listaProfissionais"),l=carregarProfissionais();
-  div.innerHTML=l.map(p=>'<div class="profissional"><h3>'+escapeHTML(p.nome)+'</h3><p><strong>Login:</strong> '+escapeHTML(p.login)+'</p><p><strong>Tipo:</strong> '+(p.administrador?"Administrador":"Profissional")+'</p>'+(p.administrador?'<p style="color:#666">Administrador principal</p>':'<div class="acoes"><button class="btn-amarelo" onclick="editarSenhaProfissional(\''+escapeHTML(p.login)+'\')">🔑 Editar senha</button><button class="btn-vermelho" onclick="excluirProfissional(\''+escapeHTML(p.login)+'\')">🗑️ Excluir profissional</button></div>')+'</div>').join("");
-}
+  const p = window.profissionalLogada;
 
-function exportarCSV(){
-  const c=carregarCadastros().map(normalizarCadastro),linhas=[["Protocolo","Responsável","CPF","Telefone","Animal","Espécie","Status","Mês da vaga"]];
-  c.forEach(x=>linhas.push([x.protocolo,x.dono,x.cpf,x.telefones.join(" / "),x.animal,x.especie,x.status,x.filaEspera?"Fila de espera":nomeMes(x.mesVaga)]));
-  const csv=linhas.map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\n"),blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cadastros-castrapet.csv";a.click();URL.revokeObjectURL(a.href);
+  if(
+    !p ||
+    (!p.administrador && !p.permissoes?.site)
+  ){
+    alert("Você não possui permissão para editar o mural.");
+    return;
+  }
+
+  const texto =
+    document
+      .getElementById("editorMural")
+      .value
+      .trim();
+
+  const agora =
+    new Date().toISOString();
+
+  const { data: existente, error: erroBusca } =
+    await supabaseClient
+      .from("mural")
+      .select("*")
+      .eq("ativo", true)
+      .limit(1);
+
+  if(erroBusca){
+    console.error(erroBusca);
+    alert("Erro ao verificar o mural.");
+    return;
+  }
+
+  if(existente && existente.length > 0){
+
+    const { error } =
+      await supabaseClient
+        .from("mural")
+        .update({
+          texto: texto,
+          updated_at: agora
+        })
+        .eq("id", existente[0].id);
+
+    if(error){
+      console.error(error);
+      alert("Erro ao atualizar o mural.");
+      return;
+    }
+
+  }else{
+
+    const { error } =
+      await supabaseClient
+        .from("mural")
+        .insert([{
+          texto: texto,
+          ativo: true,
+          updated_at: agora
+        }]);
+
+    if(error){
+      console.error(error);
+      alert("Erro ao salvar o mural.");
+      return;
+    }
+
+  }
+
+  await renderizarMural();
+
+  alert(
+    texto
+      ? "Mural atualizado com sucesso!"
+      : "Mural apagado."
+  );
+
+}
+async function renderizarMural(){
+
+  const mural =
+    await carregarMural();
+
+  document.getElementById(
+    "muralTexto"
+  ).textContent =
+    mural?.texto ||
+    "Nenhum aviso publicado no momento.";
+
+  document.getElementById(
+    "muralData"
+  ).textContent =
+    mural?.updated_at
+      ? "Última atualização: " +
+        new Date(
+          mural.updated_at
+        ).toLocaleString("pt-BR")
+      : "";
+
+}
+  async function salvarLimiteVagas(){
+
+  const profissional =
+    window.profissionalLogada;
+
+  if(
+    !profissional ||
+    (
+      !profissional.administrador &&
+      !profissional.permissoes?.site
+    )
+  ){
+    alert(
+      "Você não possui permissão para alterar as vagas."
+    );
+
+    return;
+  }
+
+  const mes =
+    document.getElementById("mesVagas").value;
+
+  const limite =
+    Number(
+      document
+        .getElementById("limiteVagas")
+        .value
+    );
+
+  if(!mes){
+    alert("Selecione um mês.");
+
+    return;
+  }
+
+  if(
+    !Number.isFinite(limite) ||
+    limite < 0
+  ){
+    alert(
+      "Informe um limite válido."
+    );
+
+    return;
+  }
+
+  const { data: existente, error: erroBusca } =
+    await supabaseClient
+      .from("vagas")
+      .select("*")
+      .eq("mes", mes)
+      .maybeSingle();
+
+  if(erroBusca){
+    console.error(erroBusca);
+
+    alert(
+      "Erro ao verificar as vagas."
+    );
+
+    return;
+  }
+
+  let error;
+
+  if(existente){
+
+    const resposta =
+      await supabaseClient
+        .from("vagas")
+        .update({
+          limite: limite
+        })
+        .eq("mes", mes);
+
+    error = resposta.error;
+
+  }else{
+
+    const resposta =
+      await supabaseClient
+        .from("vagas")
+        .insert([
+          {
+            mes: mes,
+            limite: limite
+          }
+        ]);
+
+    error = resposta.error;
+
+  }
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "Erro ao salvar o limite: " +
+      error.message
+    );
+
+    return;
+  }
+
+  alert(
+    "Limite de vagas salvo com sucesso!"
+  );
+
+  await renderizarVagasPublicas();
+
+  await renderizarVagasModerador();
+
+}
+async function renderizarVagasPublicas(){
+
+  const meses = [];
+
+  let m = mesAtual();
+
+  for(let i = 0; i < 6; i++){
+    meses.push(m);
+    m = proximoMes(m);
+  }
+
+  let html = "";
+
+  for(const mes of meses){
+
+   const lim = await limiteDoMes(mes);
+
+    const q = await quantidadeMes(mes);
+
+    const fechada = q >= lim;
+
+    html += `
+      <div class="vaga-mes">
+
+        <strong>${q}/${lim}</strong>
+
+        <p style="margin:6px 0 8px;text-transform:capitalize">
+          ${escapeHTML(nomeMes(mes))}
+        </p>
+
+        <span class="badge ${fechada ? "fechada" : ""}">
+          ${fechada
+            ? "Vagas encerradas"
+            : "Vagas disponíveis"}
+        </span>
+
+      </div>
+    `;
+  }
+
+  document.getElementById("vagasPublicas").innerHTML = `
+    <div class="vagas-grid">
+      ${html}
+    </div>
+
+    <p style="margin-top:12px;color:#666">
+      Cadastros feitos quando um mês estiver cheio são encaminhados automaticamente para o próximo mês disponível.
+    </p>
+  `;
+}
+async function renderizarVagasModerador(){
+
+  const meses = [];
+
+  let mes = mesAtual();
+
+  for(let i = 0; i < 12; i++){
+
+    meses.push(mes);
+
+    mes =
+      proximoMes(mes);
+
+  }
+
+  let html = "";
+
+  for(const mesAtualDaLista of meses){
+
+    const limite =
+      await limiteDoMes(
+        mesAtualDaLista
+      );
+
+    const quantidade =
+      await quantidadeMes(
+        mesAtualDaLista
+      );
+
+    const fechado =
+      quantidade >= limite;
+
+    html +=
+      '<div class="vaga-mes" ' +
+      'style="margin-bottom:8px">' +
+
+      '<strong>' +
+      quantidade +
+      '/' +
+      limite +
+      '</strong> — ' +
+
+      '<span ' +
+      'style="text-transform:capitalize">' +
+
+      escapeHTML(
+        nomeMes(mesAtualDaLista)
+      ) +
+
+      '</span> ' +
+
+      (
+        fechado
+          ? '<span class="badge fechada">FECHADO</span>'
+          : '<span class="badge">ABERTO</span>'
+      ) +
+
+      '</div>';
+
+  }
+
+  document.getElementById(
+    "vagasModerador"
+  ).innerHTML = html;
+
+}
+async function criarProfissional(){
+
+  const atual = window.profissionalLogada;
+
+  if(!atual || !atual.administrador){
+    alert("Somente o administrador pode cadastrar profissionais.");
+    return;
+  }
+
+  const nome = document.getElementById("novoProfNome").value.trim();
+  const email = document.getElementById("novoProfLogin").value.trim();
+  const senha = document.getElementById("novoProfSenha").value;
+
+  const cadastrar =
+    document.getElementById("permCadastro").checked;
+
+  const editar =
+    document.getElementById("permEditar").checked;
+
+  const site =
+    document.getElementById("permSite").checked;
+
+  if(!nome || !email || !senha){
+    alert("Preencha nome, e-mail e senha.");
+    return;
+  }
+
+  try{
+
+    const { data, error } =
+      await supabaseClient.functions.invoke(
+        "criar-profissional",
+        {
+          body: {
+            nome: nome,
+            email: email,
+            senha: senha,
+            permissoes: {
+              cadastrar: cadastrar,
+              editar: editar,
+              site: site
+            }
+          }
+        }
+      );
+
+    if(error){
+      console.error(error);
+
+      alert(
+        "Erro ao criar profissional: " +
+        (error.message || "Erro desconhecido.")
+      );
+
+      return;
+    }
+
+    if(data && data.error){
+
+      alert(
+        "Erro ao criar profissional: " +
+        data.error
+      );
+
+      return;
+    }
+
+    document.getElementById("novoProfNome").value = "";
+    document.getElementById("novoProfLogin").value = "";
+    document.getElementById("novoProfSenha").value = "";
+
+    document.getElementById("permCadastro").checked = true;
+    document.getElementById("permEditar").checked = true;
+    document.getElementById("permSite").checked = false;
+
+    await renderizarProfissionais();
+
+    alert("Profissional cadastrada com sucesso!");
+
+  }catch(erro){
+
+    console.error(erro);
+
+    alert("Ocorreu um erro ao cadastrar a profissional.");
+
+  }
+
+}
+async function renderizarProfissionais(){
+
+  const atual = window.profissionalLogada;
+
+  if(!atual || !atual.administrador){
+    return;
+  }
+
+  const div = document.getElementById("listaProfissionais");
+
+  div.innerHTML = "<p>Carregando profissionais...</p>";
+
+  const { data: profissionais, error } =
+    await supabaseClient
+      .from("profissionais")
+      .select("*")
+      .order("nome");
+
+  if(error){
+
+    console.error(error);
+
+    div.innerHTML =
+      "<p>Erro ao carregar os profissionais.</p>";
+
+    return;
+  }
+
+  if(!profissionais || profissionais.length === 0){
+
+    div.innerHTML =
+      "<p>Nenhuma profissional cadastrada.</p>";
+
+    return;
+  }
+
+  div.innerHTML = profissionais.map(p => `
+
+    <div class="profissional">
+
+      <h3>${escapeHTML(p.nome)}</h3>
+
+      <p>
+        <strong>E-mail:</strong>
+        ${escapeHTML(p.email)}
+      </p>
+
+      <p>
+        <strong>Tipo:</strong>
+        ${p.administrador
+          ? "Administrador"
+          : "Profissional"}
+      </p>
+
+      <p>
+        <strong>Status:</strong>
+        ${p.ativo
+          ? "Ativa"
+          : "Desativada"}
+      </p>
+
+      <p>
+        <strong>Permissões:</strong><br>
+
+        ${p.permissoes?.cadastrar
+          ? "✓ Cadastrar profissionais<br>"
+          : ""}
+
+        ${p.permissoes?.editar
+          ? "✓ Editar cadastros<br>"
+          : ""}
+
+        ${p.permissoes?.site
+          ? "✓ Editar site"
+          : ""}
+
+      </p>
+
+    </div>
+
+  `).join("");
+
+}
+async function exportarCSV(){
+
+  const cadastros =
+    await carregarCadastros();
+
+  const c =
+    cadastros.map(
+      normalizarCadastro
+    );
+
+  const linhas = [
+    [
+      "Protocolo",
+      "Responsável",
+      "CPF",
+      "Telefone",
+      "Animal",
+      "Espécie",
+      "Status",
+      "Mês da vaga"
+    ]
+  ];
+
+  c.forEach(x => {
+
+    linhas.push([
+      x.protocolo,
+      x.dono,
+      x.cpf,
+      x.telefones.join(" / "),
+      x.animal,
+      x.especie,
+      x.status,
+
+      x.filaEspera
+        ? "Fila de espera"
+        : nomeMes(x.mesVaga)
+    ]);
+
+  });
+
+  const csv =
+    linhas
+      .map(l =>
+        l
+          .map(v =>
+            '"' +
+            String(v)
+              .replace(/"/g, '""') +
+            '"'
+          )
+          .join(";")
+      )
+      .join("\n");
+
+  const blob =
+    new Blob(
+      ["\ufeff" + csv],
+      {
+        type:
+          "text/csv;charset=utf-8"
+      }
+    );
+
+  const a =
+    document.createElement("a");
+
+  a.href =
+    URL.createObjectURL(blob);
+
+  a.download =
+    "cadastros-castrapet.csv";
+
+  a.click();
+
+  URL.revokeObjectURL(
+    a.href
+  );
+
 }
 
 function inicio(){window.scrollTo({top:0,behavior:"smooth"})}
@@ -602,7 +1835,13 @@ function irCadastro(){document.getElementById("cadastro").scrollIntoView({behavi
 document.addEventListener("click",e=>{
   if(e.target.classList.contains("modal"))e.target.style.display="none";
 });
-document.addEventListener("DOMContentLoaded",()=>{renderizarMural();renderizarVagasPublicas()});
+document.addEventListener("DOMContentLoaded", async ()=>{
+
+  await renderizarMural();
+
+  await renderizarVagasPublicas();
+
+});
 </script>
 </body>
 </html>
