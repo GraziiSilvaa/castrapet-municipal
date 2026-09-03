@@ -695,7 +695,30 @@ async function loginDono(){
     alert("Informe o CPF e o protocolo.");
     return;
   }
+  const { data, error } = await supabaseClient
+    .rpc("buscar_cadastro_tutor", {
+      p_protocolo: protocolo,
+      p_cpf: cpf
+    })
+    .single();
 
+  if(error || !data){
+    console.error(error);
+
+    alert(
+      "Não encontramos esse cadastro.\n\n" +
+      "Confira o CPF e o protocolo."
+    );
+
+    return;
+  }
+
+  fecharModais();
+
+  await mostrarAreaDono(
+    normalizarCadastro(data)
+  );
+}
 const { data, error } = await supabaseClient
   .rpc("buscar_cadastro_tutor", {
     p_protocolo: protocolo,
