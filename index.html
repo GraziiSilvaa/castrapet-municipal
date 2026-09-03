@@ -800,11 +800,9 @@ async function loginModerador(){
     }
 
     const { data: profissional, error: erroProfissional } =
-      await supabaseClient
-        .from("profissionais")
-        .select("*")
-        .eq("auth_user_id", data.user.id)
-        .single();
+  await supabaseClient
+    .rpc("buscar_profissional_logado")
+    .single();
 
     if(erroProfissional || !profissional){
       await supabaseClient.auth.signOut();
