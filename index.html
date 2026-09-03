@@ -724,20 +724,19 @@ async function loginDono(){
   document.getElementById("areaDono").style.display =
     "block";
 
- const { data: animais, error } =
+const { data: animais, error } =
   await supabaseClient
-    .from("cadastro")
-    .select("*")
-    .eq("cpf", cadastro.cpf)
-    .order("animal");
-  if(error){
-    console.error(error);
+    .rpc("buscar_animais_tutor", {
+      p_cpf: cadastro.cpf
+    });
 
-    alert("Erro ao carregar os animais.");
+if(error){
+  console.error(error);
 
-    return;
-  }
+  alert("Erro ao carregar os animais.");
 
+  return;
+}
   const animaisNormalizados =
     (animais || []).map(normalizarCadastro);
 
