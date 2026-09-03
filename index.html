@@ -696,12 +696,12 @@ async function loginDono(){
     return;
   }
 
-  const { data, error } = await supabaseClient
-    .from("cadastro")
-    .select("*")
-    .eq("protocolo", protocolo)
-    .eq("cpf", cpf)
-    .single();
+const { data, error } = await supabaseClient
+  .rpc("buscar_cadastro_tutor", {
+    p_protocolo: protocolo,
+    p_cpf: cpf
+  })
+  .single();
 
   if(error || !data){
     console.error(error);
