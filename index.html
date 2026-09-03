@@ -624,11 +624,9 @@ if(!mesDisponivel){
     atraso: false
   };
 
-  const { data, error } = await supabaseClient
-    .from("cadastro")
-    .insert([novoCadastro])
-    .select()
-    .single();
+ const { error } = await supabaseClient
+  .from("cadastro")
+  .insert([novoCadastro]);
 
   if(error){
     console.error(error);
