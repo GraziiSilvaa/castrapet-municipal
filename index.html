@@ -237,7 +237,7 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
 
 <div class="modal" id="modalModerador">
   <div class="modal-box"><h2>Área da Secretaria</h2>
-    <input id="usuario" placeholder="Login"><input type="password" id="senha" placeholder="Senha">
+<input id="usuario" type="email" placeholder="E-mail" autocomplete="email"><input type="password" id="senha" placeholder="Senha">
     <button class="btn" onclick="loginModerador()">Entrar</button><button class="btn-cinza" onclick="fecharModais()">Cancelar</button>
   </div>
 </div>
@@ -251,8 +251,18 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
     <button class="btn-cinza" style="margin-top:8px" onclick="fecharProtocolo()">Fechar</button>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+
+const SUPABASE_URL = "https://fidfdqcynzsfnzykthbu.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9maQvCvuhay-8-zFlkaCQ_AK3eOaWb";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
 
 const NUMERO_WHATSAPP="5511999999999";
 document.getElementById("whatsapp").href="https://wa.me/"+NUMERO_WHATSAPP+"?text="+encodeURIComponent("Olá! Tenho uma dúvida sobre o programa de castração.");
@@ -398,7 +408,71 @@ function iniciarProfissionais(){
 iniciarProfissionais();
 
 function abrirModerador(){fecharModais();document.getElementById("modalModerador").style.display="flex"}
-function loginModerador(){
+async function loginModerador(){
+  const email = document.getElementById("usuario").value.trim();
+  const senha = document.getElementById("senha").value;
+
+  if(!email || !senha){
+    alert("Informe o e-mail e a senha.");
+    return;
+  }
+
+  try{
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: senha
+      });
+
+    if(error || !data.user){
+      alert("E-mail ou senha incorretos.");
+      return;
+    }
+
+    const { data: profissional, error: erroProfissional } =
+      await supabaseClient
+        .from("profissionais")
+        .select("*")
+        .eq("auth_user_id", data.user.id)
+        .single();
+
+    if(erroProfissional || !profissional){
+      await supabaseClient.auth.signOut();
+      alert("Login realizado, mas este usuário não possui um perfil de profissional configurado.");
+      return;
+    }
+
+    if(profissional.ativo === false){
+      await supabaseClient.auth.signOut();
+      alert("Este profissional está desativado.");
+      return;
+    }
+
+    window.profissionalLogada = profissional;
+
+    fecharModais();
+
+    document.getElementById("moderador").style.display = "block";
+
+    document.getElementById("gerenciador").style.display =
+      profissional.administrador ? "block" : "none";
+
+    const mural = carregarConfiguracao().mural || "";
+    document.getElementById("editorMural").value = mural;
+
+    renderizarModerador();
+    renderizarProfissionais();
+    renderizarVagasModerador();
+
+    document.getElementById("moderador").scrollIntoView({
+      behavior: "smooth"
+    });
+
+  }catch(erro){
+    console.error(erro);
+    alert("Ocorreu um erro ao tentar fazer login.");
+  }
+}
   const usuario=document.getElementById("usuario").value.trim(),senha=document.getElementById("senha").value;
   const p=carregarProfissionais().find(x=>x.login===usuario&&x.senha===senha);
   if(!p){alert("Login ou senha incorretos.");return}
