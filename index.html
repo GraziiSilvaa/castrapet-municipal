@@ -288,9 +288,9 @@ const LIMITE_PADRAO=50;
 // ================================
 
 async function carregarCadastros() {
-const { error } = await supabaseClient
-  .from("cadastro")
-  .insert([novoCadastro]);
+  const { data, error } = await supabaseClient
+    .from("cadastro")
+    .select("*");
 
   if (error) {
     console.error("Erro ao carregar cadastros:", error);
@@ -299,7 +299,6 @@ const { error } = await supabaseClient
 
   return data || [];
 }
-
 
 async function buscarCadastroPorProtocolo(protocolo) {
   const { data, error } = await supabaseClient
