@@ -1763,14 +1763,14 @@ async function renderizarProfissionais(){
           ? `
             <button
               class="btn-cinza"
-              onclick="alterarStatusProfissional('${p.id}', false)">
+             onclick="alterarStatusProfissional('${p.id}', ${p.ativo})"
               ⛔ Desativar
             </button>
           `
           : `
             <button
               class="btn"
-              onclick="alterarStatusProfissional('${p.id}', true)">
+             onclick="alterarStatusProfissional('${p.id}', ${p.ativo})"
               🔄 Reativar
             </button>
           `
@@ -1781,6 +1781,52 @@ async function renderizarProfissionais(){
     </div>
 
   `).join("");
+}
+async function alterarStatusProfissional(id, ativoAtual){
+
+  if(!window.profissionalLogada?.administrador){
+    alert("Apenas o administrador pode alterar o status dos profissionais.");
+    return;
+  }
+
+  const novoStatus = !ativoAtual;
+
+  const confirmacao = confirm(
+    novoStatus
+      ? "Deseja reativar este profissional?"
+      : "Deseja desativar este profissional?"
+  );
+
+  if(!confirmacao){
+    return;
+  }
+
+  const { error } = await supabaseClient.rpc(
+    "alterar_status_profissional",
+    {
+      p_id: id,
+      p_ativo: novoStatus
+    }
+  );
+
+  if(error){
+    console.error(error);
+
+    alert(
+      "Erro ao alterar status: " +
+      error.message
+    );
+
+    return;
+  }
+
+  alert(
+    novoStatus
+      ? "Profissional reativado com sucesso."
+      : "Profissional desativado com sucesso."
+  );
+
+  await renderizarProfissionais();
 }
 async function editarProfissional(id){
 
@@ -1850,8 +1896,7 @@ async function editarProfissional(id){
   await renderizarProfissionais();
 
 }
-async function exportarCSV(){
-
+  async function exportarCSV(){
   const cadastros =
     await carregarCadastros();
 
