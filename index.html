@@ -62,6 +62,12 @@ button{cursor:pointer;border:none;border-radius:8px;padding:11px 15px;font-weigh
 .mural h2{color:#8a6500;margin-bottom:8px}.mural-conteudo{font-size:17px;line-height:1.6;white-space:pre-wrap}.mural small{display:block;margin-top:10px;color:#777}
 .vagas{background:#eef7ff;border:2px solid #0066cc;border-radius:12px;padding:18px;margin:20px 0}.vagas h3{color:#0066cc;margin-bottom:10px}
 .vagas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.vaga-mes{background:white;border-radius:10px;padding:14px;box-shadow:0 2px 7px #0001}.vaga-mes strong{font-size:24px;color:#0066cc}
+.vagas-recolhiveis details{background:white;border-radius:10px;box-shadow:0 2px 8px #0001;overflow:hidden}
+.vagas-recolhiveis summary{cursor:pointer;list-style:none;padding:16px 18px;font-size:18px;font-weight:bold;color:#0066cc;display:flex;align-items:center;justify-content:space-between}
+.vagas-recolhiveis summary::-webkit-details-marker{display:none}
+.vagas-recolhiveis details[open] .seta-vagas{transform:rotate(180deg)}
+.seta-vagas{transition:transform .2s ease;font-size:20px}
+.vagas-conteudo{padding:0 18px 18px}
 .badge{display:inline-block;padding:5px 9px;border-radius:15px;font-size:12px;background:#e8f5e8;color:#176b35}.badge.fechada{background:#ffe5e5;color:#a40000}.badge.espera{background:#fff3cd;color:#7a5a00}
 footer{background:#073b66;color:white;text-align:center;padding:22px;margin-top:40px}
 .moderador-bloco{background:#f7fbff;border:1px solid #d7e8f5;padding:20px;border-radius:12px;margin-top:20px}.moderador-bloco h3{color:#0066cc;margin-bottom:10px}
@@ -101,10 +107,21 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   <small id="muralData"></small>
 </section>
 
-<section class="container">
-  <h2>Vagas para castração</h2>
-  <p class="subtitulo">A quantidade de vagas é controlada por mês. Quando um mês atingir o limite, os novos cadastros passam para o próximo mês disponível.</p>
-  <div class="vagas" id="vagasPublicas"></div>
+<section class="container vagas-recolhiveis">
+  <details>
+    <summary>
+      Vagas para castração
+      <span class="seta-vagas">▾</span>
+    </summary>
+
+    <div class="vagas-conteudo">
+      <p class="subtitulo">
+        A quantidade de vagas é controlada por mês. Quando um mês atingir o limite, os novos cadastros passam para o próximo mês disponível.
+      </p>
+
+      <div class="vagas" id="vagasPublicas"></div>
+    </div>
+  </details>
 </section>
 
 <section class="container" id="cadastro">
