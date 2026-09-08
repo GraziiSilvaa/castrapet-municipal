@@ -736,7 +736,9 @@ async function loginDono(){
     normalizarCadastro(data)
   );
 }
-  async function mostrarAreaDono(cadastro){
+ async function mostrarAreaDono(cadastro){
+
+  esconderPaginaPublica();
 
   document.getElementById("areaDono").style.display =
     "block";
@@ -792,7 +794,11 @@ function criarCardDono(c){
   let n=(c.notificacoes||[]).map(x=>'<div class="notificacao-dono">📢 '+escapeHTML(x)+'</div>').join("");
   return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>'+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+(c.agendamento?'<p><strong>Agendamento:</strong> '+escapeHTML(c.agendamento)+'</p>':"")+n+'</div></div>';
 }
-function sairDono(){document.getElementById("areaDono").style.display="none";window.scrollTo({top:0,behavior:"smooth"})}
+function sairDono(){
+  document.getElementById("areaDono").style.display="none";
+  mostrarPaginaPublica();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
 
 function abrirModerador(){fecharModais();document.getElementById("modalModerador").style.display="flex"}
 async function loginModerador(){
@@ -835,9 +841,9 @@ async function loginModerador(){
 
     window.profissionalLogada = profissional;
 
-    fecharModais();
-
-    document.getElementById("moderador").style.display = "block";
+   fecharModais();
+esconderPaginaPublica();
+document.getElementById("moderador").style.display = "block";
 
     document.getElementById("gerenciador").style.display =
       profissional.administrador ? "block" : "none";
@@ -864,15 +870,10 @@ document.getElementById(
 
 async function sairModerador(){
   window.profissionalLogada = null;
-
   await supabaseClient.auth.signOut();
-
   document.getElementById("moderador").style.display = "none";
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  mostrarPaginaPublica();
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 async function renderizarModerador(){
 
@@ -1836,6 +1837,23 @@ async function exportarCSV(){
     a.href
   );
 
+}
+function mostrarPaginaPublica(){
+  document.getElementById("inicio").style.display = "flex";
+  document.getElementById("muralPublico").style.display = "block";
+  document.querySelector(".vagas-recolhiveis").style.display = "block";
+  document.getElementById("cadastro").style.display = "block";
+  document.querySelector(".faq").style.display = "block";
+  document.querySelector(".ajuda").style.display = "block";
+}
+
+function esconderPaginaPublica(){
+  document.getElementById("inicio").style.display = "none";
+  document.getElementById("muralPublico").style.display = "none";
+  document.querySelector(".vagas-recolhiveis").style.display = "none";
+  document.getElementById("cadastro").style.display = "none";
+  document.querySelector(".faq").style.display = "none";
+  document.querySelector(".ajuda").style.display = "none";
 }
 
 function inicio(){window.scrollTo({top:0,behavior:"smooth"})}
