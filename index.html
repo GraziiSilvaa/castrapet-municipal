@@ -1688,8 +1688,9 @@ async function renderizarProfissionais(){
   div.innerHTML = "<p>Carregando profissionais...</p>";
 
   const { data: profissionais, error } =
-  await supabaseClient
-    .rpc("listar_profissionais");
+    await supabaseClient
+      .rpc("listar_profissionais");
+
   if(error){
 
     console.error(error);
@@ -1738,21 +1739,115 @@ async function renderizarProfissionais(){
 
         ${p.permissoes?.cadastrar
           ? "✓ Cadastrar profissionais<br>"
-          : ""}
+          : "✕ Cadastrar profissionais<br>"}
 
         ${p.permissoes?.editar
           ? "✓ Editar cadastros<br>"
-          : ""}
+          : "✕ Editar cadastros<br>"}
 
         ${p.permissoes?.site
           ? "✓ Editar site"
-          : ""}
-
+          : "✕ Editar site"}
       </p>
+
+      <div class="acoes">
+
+        <button
+          class="btn"
+          onclick="editarProfissional('${p.id}')">
+          ✏️ Editar
+        </button>
+
+        ${
+          p.ativo
+          ? `
+            <button
+              class="btn-cinza"
+              onclick="alterarStatusProfissional('${p.id}', false)">
+              ⛔ Desativar
+            </button>
+          `
+          : `
+            <button
+              class="btn"
+              onclick="alterarStatusProfissional('${p.id}', true)">
+              🔄 Reativar
+            </button>
+          `
+        }
+
+      </div>
 
     </div>
 
   `).join("");
+}
+async function editarProfissional(id){
+
+  if(!window.profissionalLogada?.administrador){
+    alert("Apenas o administrador pode editar profissionais.");
+    return;
+  }
+
+  const nome = prompt("Digite o novo nome do profissional:");
+
+  if(nome === null){
+    return;
+  }
+
+  const administrador = confirm(
+    "Este profissional será administrador?"
+  );
+
+  const ativo = confirm(
+    "Este profissional ficará ativo?"
+  );
+
+  const permissoes = {
+
+    cadastrar: confirm(
+      "Pode cadastrar profissionais?"
+    ),
+
+    editar: confirm(
+      "Pode editar cadastros?"
+    ),
+
+    site: confirm(
+      "Pode editar o site?"
+    )
+
+  };
+
+  const { error } =
+    await supabaseClient.rpc(
+      "editar_profissional",
+      {
+        p_id: id,
+        p_nome: nome,
+        p_administrador: administrador,
+        p_permissoes: permissoes,
+        p_ativo: ativo
+      }
+    );
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "Erro ao editar profissional: " +
+      error.message
+    );
+
+    return;
+  }
+
+  alert(
+    "Profissional atualizado com sucesso."
+  );
+
+  await renderizarProfissionais();
 
 }
 async function exportarCSV(){
