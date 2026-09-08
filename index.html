@@ -1688,11 +1688,8 @@ async function renderizarProfissionais(){
   div.innerHTML = "<p>Carregando profissionais...</p>";
 
   const { data: profissionais, error } =
-    await supabaseClient
-      .from("profissionais")
-      .select("*")
-      .order("nome");
-
+  await supabaseClient
+    .rpc("listar_profissionais");
   if(error){
 
     console.error(error);
