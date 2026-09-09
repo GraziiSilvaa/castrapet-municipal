@@ -322,7 +322,7 @@ async function buscarCadastroPorProtocolo(protocolo) {
     .from("cadastro")
     .select("*")
     .eq("protocolo", protocolo)
-    .single();
+   .maybeSingle();
 
   if (error) {
     console.error(error);
@@ -523,7 +523,7 @@ async function enviarFotoParaStorage() {
 
   const { error } = await supabaseClient
     .storage
-    .from("FOTOS-ANIMAIS")
+    .from("fotos-animais")
     .upload(caminho, blob, {
       cacheControl: "3600",
       upsert: false,
@@ -546,7 +546,7 @@ function gerarProtocolo(){
     100 + Math.random() * 900
   );
 
-  return "PET-2026-" + agora + aleatorio;
+ return "PET-" + new Date().getFullYear() + "-" + agora + aleatorio;
 }
 function mesAtual(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function nomeMes(mes){const [a,m]=mes.split("-");return new Date(Number(a),Number(m)-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}
@@ -558,7 +558,7 @@ async function limiteDoMes(mes){
     .from("vagas")
     .select("limite")
     .eq("mes", mes)
-    .single();
+    .maybeSingle();
 
   if(error || !data){
     return LIMITE_PADRAO;
@@ -567,35 +567,19 @@ async function limiteDoMes(mes){
   return Number(data.limite);
 }
 async function quantidadeMes(mes){
-
-  const { count, error } =
-    await supabaseClient
-      .from("cadastro")
-      .select(
-        "*",
-        {
-          count: "exact",
-          head: true
-        }
-      )
-      .eq("mes_vaga", mes)
-      .eq("fila_espera", false)
-      .neq("status", "Recusado");
+  const { data, error } = await supabaseClient.rpc(
+    "contar_cadastros_mes",
+    { p_mes: mes }
+  );
 
   if(error){
-
-    console.error(
-      "Erro ao contar vagas:",
-      error
-    );
-
+    console.error("Erro ao contar cadastros:", error);
     return 0;
-
   }
 
-  return count || 0;
-
+  return Number(data || 0);
 }
+  
 async function encontrarMesDisponivel(inicio){
 
   let mes = inicio || mesAtual();
@@ -710,7 +694,7 @@ if(!mesDisponivel){
     protocolo: protocolo,
     dono: document.getElementById("dono").value.trim(),
     cpf: document.getElementById("cpf").value.trim(),
-    telefones: telefones.join(" / "),
+    telefones: telefones,
     email: document.getElementById("email").value.trim(),
     animal: document.getElementById("animal").value.trim(),
     especie: document.getElementById("especie").value,
@@ -847,30 +831,26 @@ if(error){
   const animaisNormalizados =
     (animais || []).map(normalizarCadastro);
 
-  document.getElementById("dadosDono").innerHTML =
+ const cardsDono = await Promise.all(
+  animaisNormalizados.map(async c => criarCardDono(c))
+);
 
-    '<div class="info-box">' +
+document.getElementById("dadosDono").innerHTML =
 
-      '<h3>Olá, ' +
+  '<div class="info-box">' +
 
-      escapeHTML(cadastro.dono) +
+    '<h3>Olá, ' +
+    escapeHTML(cadastro.dono) +
+    '! 🐾</h3>' +
 
-      '! 🐾</h3>' +
+    '<p style="margin-top:8px">' +
+    'Aqui você pode acompanhar todos os animais ' +
+    'cadastrados em seu nome.' +
+    '</p>' +
 
-      '<p style="margin-top:8px">' +
+  '</div>' +
 
-      'Aqui você pode acompanhar todos os animais ' +
-
-      'cadastrados em seu nome.' +
-
-      '</p>' +
-
-    '</div>' +
-
-    animaisNormalizados
-      .map(criarCardDono)
-      .join("");
-
+  cardsDono.join("");
   document
     .getElementById("areaDono")
     .scrollIntoView({
@@ -878,10 +858,32 @@ if(error){
     });
 
 }
-function criarCardDono(c){
-  let n=(c.notificacoes||[]).map(x=>'<div class="notificacao-dono">📢 '+escapeHTML(x)+'</div>').join("");
-  return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>'+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+(c.agendamento?'<p><strong>Agendamento:</strong> '+escapeHTML(c.agendamento)+'</p>':"")+n+'</div></div>';
+async function criarCardDono(c){
+  let n=(c.notificacoes||[])
+    .map(x=>'<div class="notificacao-dono">📢 '+escapeHTML(x)+'</div>')
+    .join("");
+
+  const urlFoto = await obterUrlFoto(c.foto);
+
+  return '<div class="pet-card">' +
+    '<div>' +
+      (urlFoto
+        ? '<img src="'+urlFoto+'" alt="Foto do animal">'
+        : '<div style="font-size:100px">🐾</div>') +
+    '</div>' +
+
+    '<div class="pet-info">' +
+      '<h3>'+escapeHTML(c.animal||"Sem nome")+'</h3>' +
+      '<p><strong>Espécie:</strong> '+escapeHTML(c.especie||"")+'</p>' +
+      '<p><strong>Sexo:</strong> '+escapeHTML(c.sexo||"")+'</p>' +
+      '<p><strong>Porte:</strong> '+escapeHTML(c.porte||"")+'</p>' +
+      '<p><strong>Idade:</strong> '+escapeHTML(c.idade||"")+'</p>' +
+      '<p><strong>Status:</strong> '+escapeHTML(c.status||"")+'</p>' +
+      n +
+    '</div>' +
+  '</div>';
 }
+
 function sairDono(){
   document.getElementById("areaDono").style.display="none";
   mostrarPaginaPublica();
@@ -940,7 +942,7 @@ document.getElementById("moderador").style.display = "block";
 
 document.getElementById(
   "editorMural"
-).value = mural?.texto || "";
+).value = mural?.mensagem || "";
 
     renderizarModerador();
     renderizarProfissionais();
@@ -1076,9 +1078,9 @@ async function renderizarModerador(){
 
         <div class="animais-tutor">
 
-          ${g.animais
-            .map(criarCardModerador)
-            .join("")}
+         ${await Promise.all(
+  g.animais.map(async c => criarCardModerador(c))
+).then(resultados => resultados.join(""))}
 
         </div>
 
@@ -1107,11 +1109,152 @@ async function renderizarModerador(){
   renderizarHistorico();
 
 }
-function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
+  async function obterUrlFoto(caminho){
+  if(!caminho) return null;
 
-function criarCardModerador(c){
-  const alertas=(c.alertas||[]).map(a=>"<li>"+escapeHTML(a)+"</li>").join("");
-  return '<div class="pet-card"><div>'+(c.foto?'<img src="'+c.foto+'" alt="Foto do animal">':'<div style="font-size:100px">🐾</div>')+'</div><div class="pet-info"><h3>🐾 '+escapeHTML(c.animal)+'</h3><p><strong>Protocolo:</strong> '+escapeHTML(c.protocolo)+'</p><p><strong>CPF:</strong> '+escapeHTML(c.cpf)+'</p><p><strong>Telefone(s):</strong> '+c.telefones.map(escapeHTML).join(" · ")+'</p><p><strong>E-mail:</strong> '+escapeHTML(c.email)+'</p><p><strong>Espécie:</strong> '+escapeHTML(c.especie)+'</p><p><strong>Raça:</strong> '+escapeHTML(c.raca)+'</p><p><strong>Cor:</strong> '+escapeHTML(c.cor)+'</p><p><strong>Peso:</strong> '+escapeHTML(c.peso)+' kg</p><p><strong>Idade:</strong> '+escapeHTML(c.idade)+'</p><p><strong>Porte:</strong> '+escapeHTML(c.porte)+'</p><p><strong>Sexo:</strong> '+escapeHTML(c.sexo)+'</p>'+(c.informacoes?'<p><strong>Informações:</strong> '+escapeHTML(c.informacoes)+'</p>':"")+'<p><strong>Mês da vaga:</strong> '+escapeHTML(c.filaEspera?"Fila de espera":nomeMes(c.mesVaga))+'</p><p><strong>Status:</strong> <span class="status">'+escapeHTML(c.status)+'</span></p>'+'<div class="acoes"><button class="btn" onclick="alterarStatus(\''+c.protocolo+'\')">Alterar status</button><button class="btn-amarelo" onclick="agendar(\''+c.protocolo+'\')">Agendar</button><button class="btn-verde" onclick="marcarRealizado(\''+c.protocolo+'\')">✓ Realizado</button><button class="btn" onclick="editarMensagens(\''+c.protocolo+'\')">✏️ Editar mensagens</button><button class="btn-cinza" onclick="cancelarCadastro(\''+c.protocolo+'\')">Cancelar vaga</button></div></div></div>';
+  if(
+    caminho.startsWith("http://") ||
+    caminho.startsWith("https://")
+  ){
+    return caminho;
+  }
+
+  const { data, error } = await supabaseClient.storage
+    .from("fotos-animais")
+    .createSignedUrl(caminho, 3600);
+
+  if(error){
+    console.error("Erro ao gerar URL da foto:", error);
+    return null;
+  }
+
+  return data?.signedUrl || null;
+}
+function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
+async function criarCardModerador(c){
+  const alertas = (c.alertas || [])
+    .map(a => "<li>" + escapeHTML(a) + "</li>")
+    .join("");
+
+  const urlFoto = await obterUrlFoto(c.foto);
+
+  return '<div class="pet-card">' +
+
+    '<div>' +
+      (
+        urlFoto
+          ? '<img src="' + urlFoto + '" alt="Foto do animal">'
+          : '<div style="font-size:100px">🐾</div>'
+      ) +
+    '</div>' +
+
+    '<div class="pet-info">' +
+
+      '<h3>' +
+        escapeHTML(c.animal || "Sem nome") +
+      '</h3>' +
+
+      '<p><strong>Responsável:</strong> ' +
+        escapeHTML(c.dono || "") +
+      '</p>' +
+
+      '<p><strong>CPF:</strong> ' +
+        escapeHTML(c.cpf || "") +
+      '</p>' +
+
+      '<p><strong>Protocolo:</strong> ' +
+        escapeHTML(c.protocolo || "") +
+      '</p>' +
+
+      '<p><strong>Espécie:</strong> ' +
+        escapeHTML(c.especie || "") +
+      '</p>' +
+
+      '<p><strong>Raça:</strong> ' +
+        escapeHTML(c.raca || "") +
+      '</p>' +
+
+      '<p><strong>Cor:</strong> ' +
+        escapeHTML(c.cor || "") +
+      '</p>' +
+
+      '<p><strong>Peso:</strong> ' +
+        escapeHTML(c.peso || "") +
+        ' kg</p>' +
+
+      '<p><strong>Idade:</strong> ' +
+        escapeHTML(c.idade || "") +
+      '</p>' +
+
+      '<p><strong>Porte:</strong> ' +
+        escapeHTML(c.porte || "") +
+      '</p>' +
+
+      '<p><strong>Sexo:</strong> ' +
+        escapeHTML(c.sexo || "") +
+      '</p>' +
+
+      '<p><strong>Mês da vaga:</strong> ' +
+        escapeHTML(c.mesVaga ? nomeMes(c.mesVaga) : "") +
+      '</p>' +
+
+      '<span class="status">' +
+        escapeHTML(c.status || "") +
+      '</span>' +
+
+      (
+        c.filaEspera
+          ? '<p class="aviso" style="margin-top:10px">⏳ Este cadastro está na fila de espera.</p>'
+          : ''
+      ) +
+
+      (
+        c.agendamento
+          ? '<p style="margin-top:10px"><strong>Agendamento:</strong> ' +
+            escapeHTML(c.agendamento) +
+            '</p>'
+          : ''
+      ) +
+
+      (
+        c.informacoes
+          ? '<div class="info-box"><strong>Informações importantes:</strong><br>' +
+            escapeHTML(c.informacoes) +
+            '</div>'
+          : ''
+      ) +
+
+      (
+        alertas
+          ? '<div class="aviso-atraso"><strong>Alertas:</strong><ul>' +
+            alertas +
+            '</ul></div>'
+          : ''
+      ) +
+
+      '<div class="acoes">' +
+
+        '<button class="btn" onclick="alterarStatus(\'' +
+          escapeHTML(c.protocolo) +
+        '\')">🔄 Alterar status</button>' +
+
+        '<button class="btn-amarelo" onclick="agendar(\'' +
+          escapeHTML(c.protocolo) +
+        '\')">📅 Agendar</button>' +
+
+        '<button class="btn-verde" onclick="marcarRealizado(\'' +
+          escapeHTML(c.protocolo) +
+        '\')">✅ Realizado</button>' +
+
+        '<button class="btn-vermelho" onclick="cancelarCadastro(\'' +
+          escapeHTML(c.protocolo) +
+        '\')">❌ Cancelar</button>' +
+
+      '</div>' +
+
+    '</div>' +
+
+  '</div>';
 }
 
 async function atualizarCadastro(protocolo, dadosAtualizados){
@@ -1383,10 +1526,10 @@ async function salvarMural(){
     const { error } =
       await supabaseClient
         .from("mural")
-        .update({
-          texto: texto,
-          updated_at: agora
-        })
+       .update({
+  mensagem: texto,
+  updated_at: agora
+})
         .eq("id", existente[0].id);
 
     if(error){
@@ -1401,10 +1544,10 @@ async function salvarMural(){
       await supabaseClient
         .from("mural")
         .insert([{
-          texto: texto,
-          ativo: true,
-          updated_at: agora
-        }]);
+  mensagem: texto,
+  ativo: true,
+  updated_at: agora
+}]);
 
     if(error){
       console.error(error);
@@ -1431,7 +1574,7 @@ async function renderizarMural(){
   document.getElementById(
     "muralTexto"
   ).textContent =
-    mural?.texto ||
+   mural?.mensagem ||
     "Nenhum aviso publicado no momento.";
 
   document.getElementById(
@@ -1850,17 +1993,17 @@ async function renderizarProfissionais(){
           p.ativo
           ? `
             <button
-              class="btn-cinza"
-             onclick="alterarStatusProfissional('${p.id}', ${p.ativo})"
-              ⛔ Desativar
-            </button>
+  class="btn-cinza"
+  onclick="alterarStatusProfissional('${p.id}', ${p.ativo})">
+  ⛔ Desativar
+</button>
           `
           : `
             <button
-              class="btn"
-             onclick="alterarStatusProfissional('${p.id}', ${p.ativo})"
-              🔄 Reativar
-            </button>
+  class="btn"
+  onclick="alterarStatusProfissional('${p.id}', ${p.ativo})">
+  🔄 Reativar
+</button>
           `
         }
 
