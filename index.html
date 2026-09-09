@@ -451,7 +451,95 @@ document.getElementById("foto").addEventListener("change",function(){
   const f=this.files[0]; if(!f)return;
   const r=new FileReader(); r.onload=e=>{const p=document.getElementById("preview");p.src=e.target.result;p.style.display="block"};r.readAsDataURL(f);
 });
+async function enviarFotoParaStorage() {
+  const input = document.getElementById("foto");
+  const arquivo = input.files[0];
 
+  if (!arquivo) {
+    return null;
+  }
+
+  // Impede arquivos gigantes de serem processados
+  if (arquivo.size > 8 * 1024 * 1024) {
+    throw new Error("A foto deve ter no máximo 8 MB.");
+  }
+
+  // Carrega a imagem
+  const imagem = await new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Não foi possível ler a foto."));
+
+    img.src = URL.createObjectURL(arquivo);
+  });
+
+  // Limita a maior dimensão a 1200 px
+  const tamanhoMaximo = 1200;
+
+  let largura = imagem.width;
+  let altura = imagem.height;
+
+  if (largura > tamanhoMaximo || altura > tamanhoMaximo) {
+    if (largura > altura) {
+      altura = Math.round((altura * tamanhoMaximo) / largura);
+      largura = tamanhoMaximo;
+    } else {
+      largura = Math.round((largura * tamanhoMaximo) / altura);
+      altura = tamanhoMaximo;
+    }
+  }
+
+  // Cria uma versão reduzida da imagem
+  const canvas = document.createElement("canvas");
+  canvas.width = largura;
+  canvas.height = altura;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.drawImage(imagem, 0, 0, largura, altura);
+
+  // Converte para WebP comprimido
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/webp", 0.75);
+  });
+
+  if (!blob) {
+    throw new Error("Não foi possível preparar a foto.");
+  }
+
+  // Segurança adicional: versão final não pode passar de 2 MB
+  if (blob.size > 2 * 1024 * 1024) {
+    throw new Error(
+      "A foto ficou muito grande mesmo após a compressão. Escolha outra foto."
+    );
+  }
+
+  // Nome único
+  const nomeArquivo =
+    `${Date.now()}-${Math.random().toString(36).substring(2)}.webp`;
+
+  const caminho = `animais/${nomeArquivo}`;
+
+  const { error } = await supabaseClient
+    .storage
+    .from("FOTOS-ANIMAIS")
+    .upload(caminho, blob, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: "image/webp"
+    });
+
+  if (error) {
+    console.error("Erro ao enviar foto:", error);
+    throw new Error("Não foi possível enviar a foto do animal.");
+  }
+
+  // Libera a memória usada pela imagem original
+  URL.revokeObjectURL(imagem.src);
+
+  return caminho;
+}
 function gerarProtocolo(){
   const agora = Date.now().toString().slice(-6);
   const aleatorio = Math.floor(
@@ -632,7 +720,7 @@ if(!mesDisponivel){
     idade: idade,
     porte: document.getElementById("porte").value,
     sexo: document.getElementById("sexo").value,
-    foto: document.getElementById("preview").src || null,
+    foto: await enviarFotoParaStorage(),
     informacoes: document.getElementById("informacoes").value.trim(),
    status: emEspera ? "Em espera" : "Cadastrado",
    mes_vaga: mesDaVaga,
