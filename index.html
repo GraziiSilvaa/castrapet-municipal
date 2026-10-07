@@ -586,11 +586,11 @@ async function encontrarMesDisponivel(inicio){
 
   for(let i = 0; i < 24; i++){
 
-    const quantidade =
-      await quantidadeMes(mes);
-
-    const limite =
-      await limiteDoMes(mes);
+    const [quantidade, limite] =
+  await Promise.all([
+    quantidadeMes(mes),
+    limiteDoMes(mes)
+  ]);
 
     if(quantidade < limite){
       return mes;
@@ -617,13 +617,16 @@ async function atualizarFilaAposCancelamento(mes){
     return;
   }
 
-  const espera = cadastros
-    .filter(c => c.filaEspera)
-    .sort(
-      (a, b) =>
-        new Date(a.criadoEm) -
-        new Date(b.criadoEm)
-    );
+ const espera = cadastros
+  .filter(c =>
+    c.filaEspera &&
+    c.mesVaga === mes
+  )
+  .sort(
+    (a, b) =>
+      new Date(a.criadoEm) -
+      new Date(b.criadoEm)
+  );
 
   if(!espera.length){
     return;
@@ -668,98 +671,131 @@ async function atualizarFilaAposCancelamento(mes){
 document.getElementById("formCadastro").addEventListener("submit", async function(e){
   e.preventDefault();
 
-  const telefones = Array.from(
-    document.querySelectorAll(".telefone")
-  )
-  .map(i => i.value.trim())
-  .filter(Boolean);
-
-  const protocolo = gerarProtocolo();
-
-  const idade =
-    document.getElementById("idade").value +
-    " " +
-    document.getElementById("idadeTipo").value;
-  const mesDisponivel =
-  await encontrarMesDisponivel(mesAtual());
-
-let emEspera = false;
-let mesDaVaga = mesDisponivel;
-
-if(!mesDisponivel){
-  emEspera = true;
-  mesDaVaga = mesAtual();
-}
-  const novoCadastro = {
-    protocolo: protocolo,
-    dono: document.getElementById("dono").value.trim(),
-    cpf: document.getElementById("cpf").value.trim(),
-    telefones: telefones,
-    email: document.getElementById("email").value.trim(),
-    animal: document.getElementById("animal").value.trim(),
-    especie: document.getElementById("especie").value,
-    raca: document.getElementById("raca").value.trim(),
-    cor: document.getElementById("cor").value.trim(),
-    peso: document.getElementById("peso").value,
-    idade: idade,
-    porte: document.getElementById("porte").value,
-    sexo: document.getElementById("sexo").value,
-    foto: await enviarFotoParaStorage(),
-    informacoes: document.getElementById("informacoes").value.trim(),
-   status: emEspera ? "Em espera" : "Cadastrado",
-   mes_vaga: mesDaVaga,
-  fila_espera: emEspera,
-    agendamento: null,
-    atraso: false
-  };
-
- const { error } = await supabaseClient
-  .from("cadastro")
-  .insert([novoCadastro]);
-
-  if(error){
-    console.error(error);
-    alert(
-      "Erro ao salvar o cadastro: " +
-      error.message
-    );
-    return;
+  const botao = this.querySelector('button[type="submit"]');
+  if(botao){
+    botao.disabled = true;
+    botao.textContent = "Enviando cadastro...";
   }
 
-  document.getElementById("protocoloExibido").textContent =
-    protocolo;
+  try{
 
-  window.ultimoProtocolo = protocolo;
+    const telefones = Array.from(
+      document.querySelectorAll(".telefone")
+    )
+    .map(i => i.value.trim())
+    .filter(Boolean);
 
-  document.getElementById("modalProtocolo").style.display =
-    "flex";
+    const protocolo = gerarProtocolo();
 
-  this.reset();
+    const idade =
+      document.getElementById("idade").value +
+      " " +
+      document.getElementById("idadeTipo").value;
 
-  document.getElementById("preview").style.display =
-    "none";
+    const mesDisponivel =
+      await encontrarMesDisponivel(mesAtual());
 
-  document.getElementById("telefones").innerHTML =
-    `<div class="telefone-item">
-      <input class="telefone"
-        maxlength="15"
-        placeholder="(00) 00000-0000"
-        inputmode="numeric"
-        required>
+    let emEspera = false;
+    let mesDaVaga = mesDisponivel;
 
-      <button
-        type="button"
-        class="btn-vermelho"
-        onclick="removerTelefone(this)">
-        X
-      </button>
-    </div>`;
+    if(!mesDisponivel){
+      emEspera = true;
+      mesDaVaga = mesAtual();
+    }
 
-  aplicarMascaraTelefone(
-    document.querySelector(".telefone")
-  );
+    const foto = await enviarFotoParaStorage();
 
-  await renderizarVagasPublicas();
+    const novoCadastro = {
+      protocolo: protocolo,
+      dono: document.getElementById("dono").value.trim(),
+      cpf: document.getElementById("cpf").value.trim(),
+      telefones: telefones,
+      email: document.getElementById("email").value.trim(),
+      animal: document.getElementById("animal").value.trim(),
+      especie: document.getElementById("especie").value,
+      raca: document.getElementById("raca").value.trim(),
+      cor: document.getElementById("cor").value.trim(),
+      peso: document.getElementById("peso").value,
+      idade: idade,
+      porte: document.getElementById("porte").value,
+      sexo: document.getElementById("sexo").value,
+      foto: foto,
+      informacoes: document.getElementById("informacoes").value.trim(),
+      status: emEspera ? "Em espera" : "Cadastrado",
+      mes_vaga: mesDaVaga,
+      fila_espera: emEspera,
+      agendamento: null,
+      atraso: false
+    };
+
+    const { error } = await supabaseClient
+      .from("cadastro")
+      .insert([novoCadastro]);
+
+    if(error){
+      console.error(error);
+
+      alert(
+        "Erro ao salvar o cadastro: " +
+        error.message
+      );
+
+      return;
+    }
+
+    document.getElementById("protocoloExibido").textContent =
+      protocolo;
+
+    window.ultimoProtocolo = protocolo;
+
+    document.getElementById("modalProtocolo").style.display =
+      "flex";
+
+    this.reset();
+
+    document.getElementById("preview").style.display =
+      "none";
+
+    document.getElementById("telefones").innerHTML =
+      `<div class="telefone-item">
+        <input class="telefone"
+          maxlength="15"
+          placeholder="(00) 00000-0000"
+          inputmode="numeric"
+          required>
+
+        <button
+          type="button"
+          class="btn-vermelho"
+          onclick="removerTelefone(this)">
+          X
+        </button>
+      </div>`;
+
+    aplicarMascaraTelefone(
+      document.querySelector(".telefone")
+    );
+
+    await renderizarVagasPublicas();
+
+  }catch(erro){
+
+    console.error(erro);
+
+    alert(
+      "Não foi possível concluir o cadastro.\n\n" +
+      (erro?.message || "Tente novamente.")
+    );
+
+  }finally{
+
+    if(botao){
+      botao.disabled = false;
+      botao.textContent = "Enviar cadastro";
+    }
+
+  }
+
 });
   
 function copiarProtocolo(){const p=document.getElementById("protocoloExibido").textContent;if(navigator.clipboard)navigator.clipboard.writeText(p).then(()=>alert("Protocolo copiado!\n\nGuarde esse número.")).catch(()=>alert("Seu protocolo é:\n\n"+p));else alert("Seu protocolo é:\n\n"+p)}
@@ -767,6 +803,7 @@ function fecharProtocolo(){document.getElementById("modalProtocolo").style.displ
 function fecharModais(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none")}
 function irAreaDonoDepoisCadastro(){fecharProtocolo();abrirDono()}
 function abrirDono(){fecharModais();document.getElementById("modalDono").style.display="flex"}
+
 async function loginDono(){
 
   const cpf = document
@@ -784,51 +821,143 @@ async function loginDono(){
     alert("Informe o CPF e o protocolo.");
     return;
   }
-  const { data, error } = await supabaseClient
-    .rpc("buscar_cadastro_tutor", {
-      p_protocolo: protocolo,
-      p_cpf: cpf
-    })
-    .single();
 
-  if(error || !data){
+  try{
+
+    const { data, error } =
+      await supabaseClient
+        .rpc("buscar_cadastro_tutor", {
+          p_protocolo: protocolo,
+          p_cpf: cpf
+        })
+        .single();
+
+    if(error || !data){
+
+      console.error(error);
+
+      alert(
+        "Não encontramos esse cadastro.\n\n" +
+        "Confira o CPF e o protocolo."
+      );
+
+      return;
+    }
+
+    fecharModais();
+
+    await mostrarAreaDono(
+      normalizarCadastro(data)
+    );
+
+  }catch(erro){
+
+    console.error(erro);
+
+    alert(
+      "Não foi possível consultar o cadastro agora. " +
+      "Tente novamente."
+    );
+
+  }
+
+}
+async function mostrarAreaDono(cadastro){
+
+  const { data: animais, error } =
+    await supabaseClient
+      .rpc("buscar_animais_tutor", {
+        p_cpf: cadastro.cpf
+      });
+
+  if(error){
+
     console.error(error);
 
     alert(
-      "Não encontramos esse cadastro.\n\n" +
-      "Confira o CPF e o protocolo."
+      "Erro ao carregar os animais. " +
+      "Tente novamente."
     );
 
     return;
   }
-
-  fecharModais();
-
-  await mostrarAreaDono(
-    normalizarCadastro(data)
-  );
-}
- async function mostrarAreaDono(cadastro){
 
   esconderPaginaPublica();
 
   document.getElementById("areaDono").style.display =
     "block";
 
-const { data: animais, error } =
-  await supabaseClient
-    .rpc("buscar_animais_tutor", {
-      p_cpf: cadastro.cpf
+  const animaisNormalizados =
+    (animais || []).map(normalizarCadastro);
+
+  const cardsDono = await Promise.all(
+    animaisNormalizados.map(
+      async c => criarCardDono(c)
+    )
+  );
+
+  document.getElementById("dadosDono").innerHTML =
+
+    '<div class="info-box">' +
+
+      '<h3>Olá, ' +
+      escapeHTML(cadastro.dono) +
+      '! 🐾</h3>' +
+
+      '<p style="margin-top:8px">' +
+      'Aqui você pode acompanhar todos os animais ' +
+      'cadastrados em seu nome.' +
+      '</p>' +
+
+    '</div>' +
+
+    cardsDono.join("");
+
+  document
+    .getElementById("areaDono")
+    .scrollIntoView({
+      behavior:"smooth"
     });
 
-if(error){
-  console.error(error);
-
-  alert("Erro ao carregar os animais.");
-
-  return;
 }
+  esconderPaginaPublica();
+
+  document.getElementById("areaDono").style.display =
+    "block";
+
   const animaisNormalizados =
+    (animais || []).map(normalizarCadastro);
+
+  const cardsDono = await Promise.all(
+    animaisNormalizados.map(
+      async c => criarCardDono(c)
+    )
+  );
+
+  document.getElementById("dadosDono").innerHTML =
+
+    '<div class="info-box">' +
+
+      '<h3>Olá, ' +
+      escapeHTML(cadastro.dono) +
+      '! 🐾</h3>' +
+
+      '<p style="margin-top:8px">' +
+      'Aqui você pode acompanhar todos os animais ' +
+      'cadastrados em seu nome.' +
+      '</p>' +
+
+    '</div>' +
+
+    cardsDono.join("");
+
+  document
+    .getElementById("areaDono")
+    .scrollIntoView({
+      behavior:"smooth"
+    });
+
+}
     (animais || []).map(normalizarCadastro);
 
  const cardsDono = await Promise.all(
@@ -944,9 +1073,9 @@ document.getElementById(
   "editorMural"
 ).value = mural?.mensagem || "";
 
-    renderizarModerador();
-    renderizarProfissionais();
-    renderizarVagasModerador();
+await renderizarModerador();
+await renderizarProfissionais();
+await renderizarVagasModerador();
 
     document.getElementById("moderador").scrollIntoView({
       behavior: "smooth"
@@ -1046,49 +1175,16 @@ async function renderizarModerador(){
 
     });
 
-  let html = Object.values(grupos)
+ const partes = Object.values(grupos)
+  .map(async g => `
+    ...
+    ${await Promise.all(
+      g.animais.map(async c => criarCardModerador(c))
+    ).then(resultados => resultados.join(""))}
+    ...
+  `);
 
-    .map(g => `
-
-      <div class="grupo-tutor">
-
-        <div
-          class="titulo-tutor"
-          onclick="minimizarTutor(this)"
-        >
-
-          <div>
-
-            <h2>
-              👤 ${escapeHTML(g.dono)}
-            </h2>
-
-            <p>
-              ${g.animais.length}
-              animal(is) cadastrado(s)
-            </p>
-
-          </div>
-
-          <span class="seta">
-            ▼
-          </span>
-
-        </div>
-
-        <div class="animais-tutor">
-
-         ${await Promise.all(
-  g.animais.map(async c => criarCardModerador(c))
-).then(resultados => resultados.join(""))}
-
-        </div>
-
-      </div>
-
-    `)
-
-    .join("");
+let html = (await Promise.all(partes)).join("");
 
   if(!html){
 
@@ -1109,8 +1205,11 @@ async function renderizarModerador(){
   renderizarHistorico();
 
 }
-  async function obterUrlFoto(caminho){
-  if(!caminho) return null;
+ async function obterUrlFoto(caminho){
+
+  if(!caminho){
+    return null;
+  }
 
   if(
     caminho.startsWith("http://") ||
@@ -1119,18 +1218,36 @@ async function renderizarModerador(){
     return caminho;
   }
 
-  const { data, error } = await supabaseClient.storage
-    .from("fotos-animais")
-    .createSignedUrl(caminho, 3600);
+  try{
 
-  if(error){
-    console.error("Erro ao gerar URL da foto:", error);
+    const { data, error } =
+      await supabaseClient.storage
+        .from("fotos-animais")
+        .createSignedUrl(caminho, 3600);
+
+    if(error){
+
+      console.error(
+        "Erro ao gerar URL da foto:",
+        error
+      );
+
+      return null;
+    }
+
+    return data?.signedUrl || null;
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao carregar foto:",
+      erro
+    );
+
     return null;
   }
 
-  return data?.signedUrl || null;
-}
-function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
+}function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
 async function criarCardModerador(c){
   const alertas = (c.alertas || [])
     .map(a => "<li>" + escapeHTML(a) + "</li>")
@@ -1715,13 +1832,32 @@ async function renderizarVagasPublicas(){
 
   let html = "";
 
-  for(const mes of meses){
+ const resultados = await Promise.all(
+  meses.map(async mes => {
 
-   const lim = await limiteDoMes(mes);
+    const [lim, q] = await Promise.all([
+      limiteDoMes(mes),
+      quantidadeMes(mes)
+    ]);
 
-    const q = await quantidadeMes(mes);
+    return {
+      mes,
+      lim,
+      q,
+      fechada: q >= lim
+    };
 
-    const fechada = q >= lim;
+  })
+);
+
+for(const resultado of resultados){
+
+    const {
+      mes,
+      lim,
+      q,
+      fechada
+    } = resultado;
 
     html += `
       <div class="vaga-mes">
@@ -1769,21 +1905,31 @@ async function renderizarVagasModerador(){
 
   let html = "";
 
-  for(const mesAtualDaLista of meses){
+   const resultados = await Promise.all(
+    meses.map(async mesAtualDaLista => {
 
-    const limite =
-      await limiteDoMes(
-        mesAtualDaLista
-      );
+      const [limite, quantidade] =
+        await Promise.all([
+          limiteDoMes(mesAtualDaLista),
+          quantidadeMes(mesAtualDaLista)
+        ]);
 
-    const quantidade =
-      await quantidadeMes(
-        mesAtualDaLista
-      );
+      return {
+        mes: mesAtualDaLista,
+        limite: limite,
+        quantidade: quantidade,
+        fechado: quantidade >= limite
+      };
 
-    const fechado =
-      quantidade >= limite;
+    })
+  );
 
+  for(const resultado of resultados){
+
+    const mesAtualDaLista = resultado.mes;
+    const limite = resultado.limite;
+    const quantidade = resultado.quantidade;
+    const fechado = resultado.fechado;
     html +=
       '<div class="vaga-mes" ' +
       'style="margin-bottom:8px">' +
@@ -2193,18 +2339,17 @@ async function editarProfissional(id){
   const a =
     document.createElement("a");
 
-  a.href =
-    URL.createObjectURL(blob);
+ const url =
+  URL.createObjectURL(blob);
 
-  a.download =
-    "cadastros-castrapet.csv";
+a.href = url;
 
-  a.click();
+a.download =
+  "cadastros-castrapet.csv";
 
-  URL.revokeObjectURL(
-    a.href
-  );
+a.click();
 
+URL.revokeObjectURL(url);
 }
 function mostrarPaginaPublica(){
   document.getElementById("inicio").style.display = "flex";
