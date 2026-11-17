@@ -862,6 +862,7 @@ async function loginDono(){
   }
 
 }
+
 async function mostrarAreaDono(cadastro){
 
   const { data: animais, error } =
@@ -871,120 +872,34 @@ async function mostrarAreaDono(cadastro){
       });
 
   if(error){
-
     console.error(error);
-
-    alert(
-      "Erro ao carregar os animais. " +
-      "Tente novamente."
-    );
-
+    alert("Erro ao carregar os animais. Tente novamente.");
     return;
   }
 
   esconderPaginaPublica();
 
-  document.getElementById("areaDono").style.display =
-    "block";
+  document.getElementById("areaDono").style.display = "block";
 
   const animaisNormalizados =
     (animais || []).map(normalizarCadastro);
 
   const cardsDono = await Promise.all(
-    animaisNormalizados.map(
-      async c => criarCardDono(c)
-    )
+    animaisNormalizados.map(c => criarCardDono(c))
   );
 
   document.getElementById("dadosDono").innerHTML =
-
     '<div class="info-box">' +
-
-      '<h3>Olá, ' +
-      escapeHTML(cadastro.dono) +
-      '! 🐾</h3>' +
-
+      '<h3>Olá, ' + escapeHTML(cadastro.dono) + '! 🐾</h3>' +
       '<p style="margin-top:8px">' +
-      'Aqui você pode acompanhar todos os animais ' +
-      'cadastrados em seu nome.' +
+        'Aqui você pode acompanhar todos os animais cadastrados em seu nome.' +
       '</p>' +
-
     '</div>' +
-
     cardsDono.join("");
 
-  document
-    .getElementById("areaDono")
-    .scrollIntoView({
-      behavior:"smooth"
-    });
-
-}
-  esconderPaginaPublica();
-
-  document.getElementById("areaDono").style.display =
-    "block";
-
-  const animaisNormalizados =
-    (animais || []).map(normalizarCadastro);
-
-  const cardsDono = await Promise.all(
-    animaisNormalizados.map(
-      async c => criarCardDono(c)
-    )
-  );
-
-  document.getElementById("dadosDono").innerHTML =
-
-    '<div class="info-box">' +
-
-      '<h3>Olá, ' +
-      escapeHTML(cadastro.dono) +
-      '! 🐾</h3>' +
-
-      '<p style="margin-top:8px">' +
-      'Aqui você pode acompanhar todos os animais ' +
-      'cadastrados em seu nome.' +
-      '</p>' +
-
-    '</div>' +
-
-    cardsDono.join("");
-
-  document
-    .getElementById("areaDono")
-    .scrollIntoView({
-      behavior:"smooth"
-    });
-
-}
-    (animais || []).map(normalizarCadastro);
-
- const cardsDono = await Promise.all(
-  animaisNormalizados.map(async c => criarCardDono(c))
-);
-
-document.getElementById("dadosDono").innerHTML =
-
-  '<div class="info-box">' +
-
-    '<h3>Olá, ' +
-    escapeHTML(cadastro.dono) +
-    '! 🐾</h3>' +
-
-    '<p style="margin-top:8px">' +
-    'Aqui você pode acompanhar todos os animais ' +
-    'cadastrados em seu nome.' +
-    '</p>' +
-
-  '</div>' +
-
-  cardsDono.join("");
-  document
-    .getElementById("areaDono")
-    .scrollIntoView({
-      behavior:"smooth"
-    });
+  document.getElementById("areaDono").scrollIntoView({
+    behavior: "smooth"
+  });
 
 }
 async function criarCardDono(c){
@@ -1175,15 +1090,26 @@ async function renderizarModerador(){
 
     });
 
- const partes = Object.values(grupos)
-  .map(async g => `
-    ...
-    ${await Promise.all(
-      g.animais.map(async c => criarCardModerador(c))
-    ).then(resultados => resultados.join(""))}
-    ...
-  `);
+  const partes = Object.values(grupos).map(async g => {
+    const cards = await Promise.all(
+      g.animais.map(c => criarCardModerador(c))
+    );
 
+    return `
+      <div class="grupo-tutor">
+        <div class="titulo-tutor" onclick="minimizarTutor(this)">
+          <div>
+            <h2>${escapeHTML(g.dono || "Responsável não informado")}</h2>
+            <small>${g.animais.length} animal(is)</small>
+          </div>
+          <span class="seta">⌄</span>
+        </div>
+        <div class="animais-tutor">
+          ${cards.join("")}
+        </div>
+      </div>
+    `;
+  });
 let html = (await Promise.all(partes)).join("");
 
   if(!html){
