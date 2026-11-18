@@ -1172,8 +1172,9 @@ let html = (await Promise.all(partes)).join("");
 
     return null;
   }
+ }
 
-}function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
+function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
 async function criarCardModerador(c){
   const alertas = (c.alertas || [])
     .map(a => "<li>" + escapeHTML(a) + "</li>")
