@@ -6,9 +6,11 @@
 <title>CastraPet Municipal</title>
 
 <style>
+/* PADRÕES GERAIS: padroniza medidas, remove margens padrão e define a fonte. */
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 html{scroll-behavior:smooth}
 body{background:#f2f8ff;color:#17324d;overflow-x:hidden}
+/* FUNDO ANIMADO: posiciona as patinhas atrás do conteúdo e deixa os cliques passarem. */
 .patinhas{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 .patinhas span{position:absolute;font-size:30px;opacity:.10;animation:flutuarPata 14s linear infinite}
 .patinhas span:nth-child(1){left:5%;animation-delay:0s}.patinhas span:nth-child(2){left:15%;animation-delay:3s}
@@ -18,6 +20,7 @@ body{background:#f2f8ff;color:#17324d;overflow-x:hidden}
 .patinhas span:nth-child(9){left:93%;animation-delay:2s}
 @keyframes flutuarPata{from{transform:translateY(110vh) rotate(0deg)}to{transform:translateY(-100px) rotate(360deg)}}
 
+/* ESTRUTURA E CABEÇALHO: mantém as áreas principais acima do fundo decorativo. */
 header,.hero,.container,.faq,.ajuda,footer{position:relative;z-index:1}
 header{background:linear-gradient(135deg,#005bbb,#00a8e8);color:white;padding:18px 6%;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
 .logo{display:flex;align-items:center;gap:10px}.logo-icon{font-size:38px}.logo h1{font-size:22px}.logo small{opacity:.9}
@@ -26,29 +29,36 @@ nav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}nav a{color:white;te
 .hero-text{max-width:650px}.hero h2{font-size:42px;margin-bottom:15px}.hero p{font-size:18px;line-height:1.6}
 .dog{font-size:125px;animation:flutuarDog 2s infinite alternate}@keyframes flutuarDog{from{transform:translateY(0)}to{transform:translateY(-18px)}}
 
+/* CARTÕES E FORMULÁRIOS: define largura máxima, centralização e aparência dos blocos. */
 .container{width:90%;max-width:950px;margin:40px auto;background:white;padding:35px;border-radius:18px;box-shadow:0 5px 25px #0002}
 .container h2{color:#0066cc;text-align:center;margin-bottom:10px}.subtitulo{text-align:center;color:#666;margin-bottom:25px}
+/* FORMULÁRIO: organiza os campos em duas colunas; no celular isso muda para uma. */
 .form{display:grid;grid-template-columns:1fr 1fr;gap:16px}.campo{display:flex;flex-direction:column}
 .campo label{font-weight:bold;margin-bottom:6px}.campo input,.campo select,.campo textarea{padding:12px;border:1px solid #ccd8e3;border-radius:8px;outline:none}
 .campo input:focus,.campo select:focus,.campo textarea:focus{border-color:#0066cc}.campo textarea{min-height:100px;resize:vertical}.completo{grid-column:1/3}
 button{cursor:pointer;border:none;border-radius:8px;padding:11px 15px;font-weight:bold}.btn{background:#0066cc;color:white}.btn:hover{opacity:.9}
 .btn-verde{background:#198754;color:white}.btn-amarelo{background:#ffc107;color:#222}.btn-vermelho{background:#dc3545;color:white}.btn-cinza{background:#666;color:white}
+/* TELEFONES: permite alinhar vários campos e fazer o campo de número ocupar o espaço. */
 .telefones{display:flex;flex-direction:column;gap:8px}.telefone-item{display:flex;gap:8px}.telefone-item input{flex:1}
 .foto{border:2px dashed #70bce8;padding:20px;text-align:center;border-radius:10px;background:#f5fbff}
 #preview{display:none;max-width:180px;max-height:180px;margin:15px auto;border-radius:12px}
 .info-box{background:#eef8ff;padding:15px;border-radius:10px;margin-top:15px}.aviso{padding:15px;margin-top:15px;border-radius:10px;background:#fff3cd;color:#664d03}
-.aviso-atraso{background:#ffe5e5;color:#990000}.faq{max-width:900px;margin:35px auto;width:90%}.faq h2{color:#0066cc;text-align:center;margin-bottom:20px}
+.aviso-atraso{background:#ffe5e5;color:#990000}/* PERGUNTAS FREQUENTES E ÁREA DE CONTATO. */
+.faq{max-width:900px;margin:35px auto;width:90%}.faq h2{color:#0066cc;text-align:center;margin-bottom:20px}
 .faq details{background:white;margin:10px 0;padding:15px;border-radius:8px;box-shadow:0 2px 8px #0001}.faq summary{cursor:pointer;font-weight:bold}.faq p{margin-top:10px;line-height:1.5}
 .ajuda{background:#e8f5ff;text-align:center;padding:45px 10%}.ajuda h2{color:#0066cc;margin-bottom:12px}
 .whatsapp{display:inline-block;margin-top:18px;padding:13px 22px;border-radius:25px;background:#159447;color:white;text-decoration:none;font-weight:bold}
+/* JANELAS MODAIS: ficam sobre a página e começam escondidas até o JavaScript abri-las. */
 .modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:20px}
 .modal-box{background:white;width:90%;max-width:520px;max-height:90vh;overflow:auto;padding:30px;border-radius:15px}
 .modal-box h2{color:#0066cc;text-align:center;margin-bottom:20px}.modal-box input,.modal-box select,.modal-box textarea{width:100%;padding:13px;margin-bottom:12px;border:1px solid #ccc;border-radius:7px}.modal-box button{width:100%;margin-top:7px}
 #areaDono,#moderador{display:none}.protocolo-box{background:#eef7ff;border:2px solid #0066cc;border-radius:12px;padding:20px;text-align:center;margin:20px 0}
 .protocolo{font-size:26px;font-weight:bold;color:#0066cc;margin:12px;word-break:break-all}
+/* PAINEL: cartões de indicadores e organização dos filtros/listagens administrativas. */
 .dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:20px 0}.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px #0001}.card h3{color:#0066cc;margin-bottom:8px}.card strong{font-size:28px}
 .filtros{background:white;padding:20px;border-radius:12px;margin-bottom:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .filtros input,.filtros select{padding:10px;border:1px solid #ccc;border-radius:7px}
+/* LISTA DE ANIMAIS: agrupa os pets por responsável e organiza seus cartões. */
 .lista{display:flex;flex-direction:column;gap:20px}.grupo-tutor{background:#eaf5ff;border-radius:15px;padding:20px}
 .titulo-tutor{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}.titulo-tutor h2{color:#005bbb;margin:0 0 5px}.seta{font-size:25px;transition:.25s;color:#005bbb;padding:10px}
 .titulo-tutor.minimizado .seta{transform:rotate(-90deg)}.animais-tutor{display:block;margin-top:10px}.animais-tutor.minimizado{display:none}
@@ -56,6 +66,7 @@ button{cursor:pointer;border:none;border-radius:8px;padding:11px 15px;font-weigh
 .pet-info{flex:1}.pet-info h3{color:#0066cc;margin-bottom:8px}.pet-info p{margin:5px 0}.status{display:inline-block;padding:7px 12px;margin-top:8px;border-radius:20px;background:#fff3cd;color:#856404}.acoes{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
 .notificacao-dono{background:#e8f5e8;border-left:5px solid #198754;padding:15px;border-radius:8px;margin-top:12px}.email-info{background:#fff8dc;padding:15px;border-radius:10px;margin-top:15px}
 .historico{background:#f8f8f8;padding:15px;margin-top:30px;border-radius:10px}.historico-item{padding:8px;border-bottom:1px solid #ddd}
+/* PROFISSIONAIS, PERMISSÕES, MURAL E VAGAS: estilos das ferramentas administrativas. */
 .profissional{background:white;padding:20px;border-radius:12px;margin-top:15px;box-shadow:0 2px 8px #0001}.profissional h3{color:#0066cc;margin-bottom:8px}
 .permissoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.profissional input[type="text"],.profissional input[type="password"]{width:100%;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:7px}
 .mural{background:#fff8dc;border-left:6px solid #ffc107;border-radius:12px;padding:20px;margin:25px auto;width:90%;max-width:950px;box-shadow:0 3px 12px #0001;position:relative;z-index:2}
@@ -72,6 +83,7 @@ button{cursor:pointer;border:none;border-radius:8px;padding:11px 15px;font-weigh
 footer{background:#073b66;color:white;text-align:center;padding:22px;margin-top:40px}
 .moderador-bloco{background:#f7fbff;border:1px solid #d7e8f5;padding:20px;border-radius:12px;margin-top:20px}.moderador-bloco h3{color:#0066cc;margin-bottom:10px}
 textarea.mural-editor{min-height:110px;width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;resize:vertical}
+/* RESPONSIVIDADE: adapta colunas, cartões e navegação para telas menores. */
 @media(max-width:800px){
 header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:center;gap:30px}.hero h2{font-size:31px}.dog{font-size:80px}
 .form,.filtros{grid-template-columns:1fr}.completo{grid-column:1}.dashboard,.vagas-grid{grid-template-columns:1fr}.pet-card{flex-direction:column}.pet-card img{width:100%;max-width:180px}.permissoes{grid-template-columns:1fr}
@@ -80,8 +92,10 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
 </head>
 
 <body>
+<!-- Elementos decorativos fixos; o CSS anima as patinhas sem bloquear cliques. -->
 <div class="patinhas"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
 
+<!-- Cabeçalho: apresenta a identidade do site e os atalhos de navegação. -->
 <header>
   <div class="logo"><div class="logo-icon">🐾</div><div><h1>CastraPet Municipal</h1><small>Programa Municipal de Saúde Animal</small></div></div>
   <nav>
@@ -92,6 +106,7 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   </nav>
 </header>
 
+<!-- Destaque inicial: apresenta o programa e leva o visitante ao formulário. -->
 <section class="hero" id="inicio">
   <div class="hero-text">
     <h2>Programa Municipal de Castração</h2>
@@ -101,12 +116,14 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   <div class="dog">🐕</div>
 </section>
 
+<!-- Mural público: recebe avisos que a Secretaria publica pelo painel interno. -->
 <section class="mural" id="muralPublico">
   <h2>📌 Mural de avisos</h2>
   <div class="mural-conteudo" id="muralTexto">Nenhum aviso publicado no momento.</div>
   <small id="muralData"></small>
 </section>
 
+<!-- Área pública de vagas: mostra a disponibilidade mensal carregada do banco. -->
 <section class="container vagas-recolhiveis">
   <details>
     <summary>
@@ -124,11 +141,13 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   </details>
 </section>
 
+<!-- Formulário principal: reúne os dados do responsável e do animal. -->
 <section class="container" id="cadastro">
   <h2>Cadastro do animal</h2>
   <p class="subtitulo">Preencha os dados do responsável e do animal. Se tiver mais de um pet, faça um cadastro para cada animal.</p>
 
-  <form class="form" id="formCadastro">
+  <!-- O JavaScript intercepta o envio deste formulário para validar e salvar os dados. -->
+<form class="form" id="formCadastro">
     <div class="campo"><label>Nome do responsável</label><input id="dono" required></div>
     <div class="campo"><label>CPF</label><input id="cpf" maxlength="14" placeholder="000.000.000-00" inputmode="numeric" required></div>
 
@@ -158,12 +177,14 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   </form>
 </section>
 
+<!-- Área privada do responsável: o JavaScript preenche este espaço após o login. -->
 <section id="areaDono" class="container">
   <h2>Área do responsável</h2>
   <div id="dadosDono"></div>
   <button class="btn-cinza" onclick="sairDono()">Sair</button>
 </section>
 
+<!-- Perguntas frequentes: usa details/summary para abrir e fechar respostas. -->
 <section class="faq">
   <h2>Perguntas frequentes</h2>
   <details><summary>Onde será realizado o atendimento?</summary><p>O local será informado pela equipe responsável quando o atendimento for agendado.</p></details>
@@ -175,11 +196,13 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   <details><summary>Minha cadela está no cio. Ela pode ser castrada?</summary><p>Para este programa, o cadastro deve considerar o período indicado pela equipe. Se a fêmea estiver no cio, aguarde pelo menos 15 dias após o término do cio antes de realizar o procedimento, salvo orientação diferente da equipe veterinária responsável.</p></details>
 </section>
 
+<!-- Contato: o endereço do WhatsApp é configurado no JavaScript. -->
 <section class="ajuda">
   <h2>Precisa de ajuda?</h2><p>Fale com a equipe responsável pelo programa.</p>
   <a class="whatsapp" id="whatsapp" target="_blank">💬 Falar pelo WhatsApp</a>
 </section>
 
+<!-- Painel interno da Secretaria: filtros, cadastros, vagas e profissionais. -->
 <section id="moderador">
   <div class="container" style="margin-top:0">
     <div style="background:linear-gradient(135deg,#005bbb,#00a8e8);color:white;padding:25px;border-radius:15px">
@@ -188,7 +211,8 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
       <button class="btn" onclick="sairModerador()" style="margin-top:12px">Sair</button>
     </div>
 
-    <div class="dashboard">
+    <!-- Indicadores resumidos do painel, atualizados pelo JavaScript. -->
+<div class="dashboard">
       <div class="card"><h3>Cadastros</h3><strong id="qtdCadastros">0</strong></div>
       <div class="card"><h3>Pendentes</h3><strong id="qtdPendentes">0</strong></div>
       <div class="card"><h3>Em espera</h3><strong id="qtdEspera">0</strong></div>
@@ -211,7 +235,8 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
       <div id="vagasModerador" style="margin-top:15px"></div>
     </div>
 
-    <div class="filtros">
+    <!-- Campos de pesquisa: cada alteração chama a função que redesenha a lista. -->
+<div class="filtros">
       <input id="filtroNome" placeholder="Pesquisar tutor ou animal" oninput="renderizarModerador()">
       <input id="filtroCpf" placeholder="CPF" oninput="renderizarModerador()">
       <select id="filtroStatus" onchange="renderizarModerador()"><option value="">Todos os status</option><option>Cadastrado</option><option>Aprovado</option><option>Agendado</option><option>Realizado</option><option>Recusado</option><option>Necessita correção</option><option>Em espera</option></select>
@@ -222,7 +247,8 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
 
     <div class="historico"><h2>Histórico de atendimentos</h2><div id="historico"></div></div>
 
-    <div id="gerenciador" style="margin-top:30px">
+    <!-- Gerenciamento de profissionais e permissões de acesso. -->
+<div id="gerenciador" style="margin-top:30px">
       <h2 style="color:#0066cc">Gerenciador de profissionais</h2>
       <p style="margin-top:8px">Somente o administrador pode criar profissionais e alterar permissões.</p>
       <div class="profissional">
@@ -242,8 +268,10 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   </div>
 </section>
 
+<!-- Rodapé institucional do site. -->
 <footer>CastraPet Municipal<br>Secretaria Municipal de Saúde<br>Programa Municipal de Saúde Animal<br><br>© 2026 CastraPet</footer>
 
+<!-- Janela de login do responsável, aberta por meio do menu. -->
 <div class="modal" id="modalDono">
   <div class="modal-box"><h2>Área do responsável</h2>
   <p style="margin-bottom:15px">
@@ -267,6 +295,7 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   </div>
 </div>
 
+<!-- Janela de login da equipe da Secretaria. -->
 <div class="modal" id="modalModerador">
   <div class="modal-box"><h2>Área da Secretaria</h2>
 <input id="usuario" type="email" placeholder="E-mail" autocomplete="email"><input type="password" id="senha" placeholder="Senha">
@@ -274,6 +303,7 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
   </div>
 </div>
 
+<!-- Janela exibida após o cadastro, com o protocolo de acompanhamento. -->
 <div class="modal" id="modalProtocolo">
   <div class="modal-box" style="text-align:center"><h2>Cadastro realizado! 🐾</h2>
     <p>O cadastro do seu animal foi salvo com sucesso.</p>
@@ -283,27 +313,37 @@ header{flex-direction:column;gap:15px}.hero{flex-direction:column;text-align:cen
     <button class="btn-cinza" style="margin-top:8px" onclick="fecharProtocolo()">Fechar</button>
   </div>
 </div>
+<!-- Biblioteca oficial do Supabase: permite que o JavaScript converse com o banco e o Storage. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- A partir daqui começa o JavaScript que controla os comportamentos e integrações do site. -->
 <script>
 
+// CONFIGURAÇÃO DO SUPABASE: endereço do projeto e chave pública usada pelo navegador.
+// A proteção dos dados também depende das políticas de acesso (RLS) configuradas no Supabase.
 const SUPABASE_URL = "https://fidfdqcynzsfnzykthbu.supabase.co";
 
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9maQvCvuhay-8-zFlkaCQ_AK3eOaWb";
 
+// Cria o cliente que será reutilizado nas consultas ao banco e no armazenamento de fotos.
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY
 );
 
+// Define o número de contato e monta o link com uma mensagem já preenchida.
 const NUMERO_WHATSAPP="5511999999999";
 document.getElementById("whatsapp").href="https://wa.me/"+NUMERO_WHATSAPP+"?text="+encodeURIComponent("Olá! Tenho uma dúvida sobre o programa de castração.");
 
+// LIMITE PADRÃO: usado quando não existe um limite específico de vagas
+// configurado para determinado mês no banco de dados.
 const LIMITE_PADRAO=50;
 // ================================
 // SUPABASE - CADASTROS
 // ================================
 
+// Busca todos os cadastros salvos na tabela 'cadastro' do Supabase.
+// 'async/await' permite esperar a resposta do banco antes de continuar.
 async function carregarCadastros() {
   const { data, error } = await supabaseClient
     .from("cadastro")
@@ -317,6 +357,8 @@ async function carregarCadastros() {
   return data || [];
 }
 
+// Procura um cadastro pelo protocolo. 'maybeSingle()' espera no máximo
+// um resultado; se não encontrar, a função pode retornar null.
 async function buscarCadastroPorProtocolo(protocolo) {
   const { data, error } = await supabaseClient
     .from("cadastro")
@@ -337,6 +379,7 @@ async function buscarCadastroPorProtocolo(protocolo) {
 // SUPABASE - VAGAS
 // ================================
 
+// Busca no banco os limites de vagas cadastrados para cada mês.
 async function carregarVagas() {
 
   const { data, error } = await supabaseClient
@@ -356,6 +399,8 @@ async function carregarVagas() {
 // SUPABASE - MURAL
 // ================================
 
+// Carrega o aviso publicado no mural. Aqui são considerados apenas
+// avisos ativos, trazendo primeiro o que foi atualizado mais recentemente.
 async function carregarMural() {
 
   const { data, error } = await supabaseClient
@@ -372,6 +417,8 @@ async function carregarMural() {
 
   return data && data.length ? data[0] : null;
 }
+// PADRONIZAÇÃO: organiza os dados recebidos do banco em um formato
+// que o restante do site espera. Também cria valores padrão quando faltam dados.
 function normalizarCadastro(c){
 
   return {
@@ -410,8 +457,11 @@ function normalizarCadastro(c){
   };
 
 }
+// SEGURANÇA: transforma caracteres especiais em texto seguro para exibição
+// na página, ajudando a evitar que dados digitados virem código HTML.
 function escapeHTML(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
+// Formata o CPF enquanto a pessoa digita, inserindo pontos e traço.
 function mascaraCPF(v){
   let x=v.replace(/\D/g,"").slice(0,11);
   if(x.length>9)x=x.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,"$1.$2.$3-$4");
@@ -419,6 +469,7 @@ function mascaraCPF(v){
   else if(x.length>3)x=x.replace(/(\d{3})(\d{1,3})/,"$1.$2");
   return x;
 }
+// Faz o mesmo tipo de formatação para números de telefone.
 function mascaraTelefone(v){
   let x=v.replace(/\D/g,"").slice(0,11);
   if(x.length>10)x=x.replace(/(\d{2})(\d{5})(\d{1,4})/,"($1) $2-$3");
@@ -433,24 +484,30 @@ document
     "input",
     e => e.target.value = mascaraCPF(e.target.value)
   );
-  function aplicarMascaraTelefone(input){input.addEventListener("input",e=>e.target.value=mascaraTelefone(e.target.value))}
+  // Conecta a máscara de telefone ao campo para formatar o número durante a digitação.
+function aplicarMascaraTelefone(input){input.addEventListener("input",e=>e.target.value=mascaraTelefone(e.target.value))}
 document.querySelectorAll(".telefone").forEach(aplicarMascaraTelefone);
 
+// Adiciona outro campo de telefone ao formulário sem recarregar a página.
 function adicionarTelefone(){
   const div=document.createElement("div"); div.className="telefone-item";
   div.innerHTML='<input class="telefone" maxlength="15" placeholder="(00) 00000-0000" inputmode="numeric" required><button type="button" class="btn-vermelho" onclick="removerTelefone(this)">X</button>';
   document.getElementById("telefones").appendChild(div); aplicarMascaraTelefone(div.querySelector(".telefone"));
 }
+// Remove o campo de telefone clicado, mas impede que todos sejam removidos.
 function removerTelefone(btn){
   const itens=document.querySelectorAll(".telefone-item");
   if(itens.length<=1){alert("É necessário manter pelo menos um telefone.");return}
   btn.parentElement.remove();
 }
 
+// Mostra uma prévia da foto escolhida antes de enviá-la ao sistema.
 document.getElementById("foto").addEventListener("change",function(){
   const f=this.files[0]; if(!f)return;
   const r=new FileReader(); r.onload=e=>{const p=document.getElementById("preview");p.src=e.target.result;p.style.display="block"};r.readAsDataURL(f);
 });
+// TRATAMENTO DA FOTO: verifica o arquivo, reduz suas dimensões,
+// comprime a imagem e envia o resultado ao armazenamento do Supabase.
 async function enviarFotoParaStorage() {
   const input = document.getElementById("foto");
   const arquivo = input.files[0];
@@ -465,6 +522,8 @@ async function enviarFotoParaStorage() {
   }
 
   // Carrega a imagem
+// Aguarda o navegador conseguir abrir a imagem. 'Promise' permite
+// esperar esse processamento, que acontece de forma assíncrona.
   const imagem = await new Promise((resolve, reject) => {
     const img = new Image();
 
@@ -490,6 +549,7 @@ async function enviarFotoParaStorage() {
     }
   }
 
+// O canvas funciona como uma área de desenho usada para redimensionar a foto.
   // Cria uma versão reduzida da imagem
   const canvas = document.createElement("canvas");
   canvas.width = largura;
@@ -499,6 +559,7 @@ async function enviarFotoParaStorage() {
 
   ctx.drawImage(imagem, 0, 0, largura, altura);
 
+// Converte a imagem para WebP, um formato que costuma ocupar menos espaço.
   // Converte para WebP comprimido
   const blob = await new Promise((resolve) => {
     canvas.toBlob(resolve, "image/webp", 0.75);
@@ -521,6 +582,7 @@ async function enviarFotoParaStorage() {
 
   const caminho = `animais/${nomeArquivo}`;
 
+// Envia a foto preparada para o Storage do Supabase, na pasta 'animais'.
   const { error } = await supabaseClient
     .storage
     .from("fotos-animais")
@@ -540,6 +602,7 @@ async function enviarFotoParaStorage() {
 
   return caminho;
 }
+// Cria um protocolo para identificar o cadastro e permitir consultas futuras.
 function gerarProtocolo(){
   const agora = Date.now().toString().slice(-6);
   const aleatorio = Math.floor(
@@ -548,10 +611,12 @@ function gerarProtocolo(){
 
  return "PET-" + new Date().getFullYear() + "-" + agora + aleatorio;
 }
+// Utilitários de calendário: geram o mês atual, exibem seu nome e calculam o mês seguinte.
 function mesAtual(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function nomeMes(mes){const [a,m]=mes.split("-");return new Date(Number(a),Number(m)-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}
 function proximoMes(mes){const [a,m]=mes.split("-").map(Number);const d=new Date(a,m,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 
+// Consulta no banco quantas vagas existem para o mês informado.
 async function limiteDoMes(mes){
 
   const { data, error } = await supabaseClient
@@ -566,6 +631,7 @@ async function limiteDoMes(mes){
 
   return Number(data.limite);
 }
+// Pede ao banco a quantidade de cadastros daquele mês usando uma função SQL (RPC).
 async function quantidadeMes(mes){
   const { data, error } = await supabaseClient.rpc(
     "contar_cadastros_mes",
@@ -580,6 +646,8 @@ async function quantidadeMes(mes){
   return Number(data || 0);
 }
   
+// Procura o primeiro mês que ainda tenha vaga disponível.
+// O laço verifica até 24 meses, avançando para o mês seguinte quando lota.
 async function encontrarMesDisponivel(inicio){
 
   let mes = inicio || mesAtual();
@@ -601,6 +669,8 @@ async function encontrarMesDisponivel(inicio){
 
   return null;
 }
+// Quando uma vaga é liberada, esta função procura alguém na fila de espera
+// daquele mês e atualiza o primeiro cadastro, respeitando a ordem de criação.
 async function atualizarFilaAposCancelamento(mes){
 
   const cadastros =
@@ -668,9 +738,11 @@ async function atualizarFilaAposCancelamento(mes){
   }
 
 }
+// ENVIO DO CADASTRO: controla o formulário inteiro quando a pessoa clica em enviar.
 document.getElementById("formCadastro").addEventListener("submit", async function(e){
   e.preventDefault();
 
+// Desativa o botão durante o envio para evitar cliques repetidos.
   const botao = this.querySelector('button[type="submit"]');
   if(botao){
     botao.disabled = true;
@@ -679,6 +751,7 @@ document.getElementById("formCadastro").addEventListener("submit", async functio
 
   try{
 
+// Reúne os telefones preenchidos e remove campos que ficaram vazios.
     const telefones = Array.from(
       document.querySelectorAll(".telefone")
     )
@@ -692,6 +765,8 @@ document.getElementById("formCadastro").addEventListener("submit", async functio
       " " +
       document.getElementById("idadeTipo").value;
 
+// Verifica em qual mês há vaga. Se não houver mês disponível, o cadastro
+// será registrado como 'Em espera'.
     const mesDisponivel =
       await encontrarMesDisponivel(mesAtual());
 
@@ -705,6 +780,7 @@ document.getElementById("formCadastro").addEventListener("submit", async functio
 
     const foto = await enviarFotoParaStorage();
 
+// Monta um objeto com todos os dados que serão gravados no banco.
     const novoCadastro = {
       protocolo: protocolo,
       dono: document.getElementById("dono").value.trim(),
@@ -728,6 +804,7 @@ document.getElementById("formCadastro").addEventListener("submit", async functio
       atraso: false
     };
 
+// INSERT: grava o novo cadastro na tabela 'cadastro' do Supabase.
     const { error } = await supabaseClient
       .from("cadastro")
       .insert([novoCadastro]);
@@ -776,6 +853,7 @@ document.getElementById("formCadastro").addEventListener("submit", async functio
       document.querySelector(".telefone")
     );
 
+// Atualiza a área pública de vagas depois que o cadastro é concluído.
     await renderizarVagasPublicas();
 
   }catch(erro){
@@ -787,6 +865,8 @@ document.getElementById("formCadastro").addEventListener("submit", async functio
       (erro?.message || "Tente novamente.")
     );
 
+// O 'finally' é executado tendo ocorrido sucesso ou erro; por isso o botão
+// é reativado aqui.
   }finally{
 
     if(botao){
@@ -798,12 +878,16 @@ document.getElementById("formCadastro").addEventListener("submit", async functio
 
 });
   
+// As funções seguintes controlam os avisos, janelas e acesso à área do responsável.
+// Ações de interface: copiar o protocolo, fechar janelas e abrir a área do responsável.
 function copiarProtocolo(){const p=document.getElementById("protocoloExibido").textContent;if(navigator.clipboard)navigator.clipboard.writeText(p).then(()=>alert("Protocolo copiado!\n\nGuarde esse número.")).catch(()=>alert("Seu protocolo é:\n\n"+p));else alert("Seu protocolo é:\n\n"+p)}
 function fecharProtocolo(){document.getElementById("modalProtocolo").style.display="none"}
 function fecharModais(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none")}
 function irAreaDonoDepoisCadastro(){fecharProtocolo();abrirDono()}
 function abrirDono(){fecharModais();document.getElementById("modalDono").style.display="flex"}
 
+// LOGIN DO RESPONSÁVEL: consulta o cadastro usando a combinação de CPF e protocolo.
+// Valida a identificação do responsável antes de mostrar os cadastros relacionados.
 async function loginDono(){
 
   const cpf = document
@@ -824,6 +908,7 @@ async function loginDono(){
 
   try{
 
+// RPC chama uma função criada no banco de dados para fazer a consulta.
     const { data, error } =
       await supabaseClient
         .rpc("buscar_cadastro_tutor", {
@@ -863,6 +948,8 @@ async function loginDono(){
 
 }
 
+// Busca os animais vinculados ao CPF e monta a área privada do responsável.
+// Prepara a área privada e reúne os animais vinculados ao responsável autenticado.
 async function mostrarAreaDono(cadastro){
 
   const { data: animais, error } =
@@ -884,6 +971,7 @@ async function mostrarAreaDono(cadastro){
   const animaisNormalizados =
     (animais || []).map(normalizarCadastro);
 
+// Promise.all espera a criação de todos os cartões dos animais antes de exibi-los.
   const cardsDono = await Promise.all(
     animaisNormalizados.map(c => criarCardDono(c))
   );
@@ -902,6 +990,8 @@ async function mostrarAreaDono(cadastro){
   });
 
 }
+// Monta o cartão visual de um animal na área do responsável.
+// Constrói o HTML de cada animal exibido na área do responsável.
 async function criarCardDono(c){
   let n=(c.notificacoes||[])
     .map(x=>'<div class="notificacao-dono">📢 '+escapeHTML(x)+'</div>')
@@ -928,6 +1018,7 @@ async function criarCardDono(c){
   '</div>';
 }
 
+// Limpa a área privada e retorna o visitante à página pública.
 function sairDono(){
   document.getElementById("areaDono").style.display="none";
   mostrarPaginaPublica();
@@ -935,6 +1026,8 @@ function sairDono(){
 }
 
 function abrirModerador(){fecharModais();document.getElementById("modalModerador").style.display="flex"}
+// LOGIN DA SECRETARIA: autentica o profissional pelo serviço de autenticação do Supabase.
+// Verifica e-mail e senha usando a autenticação do Supabase.
 async function loginModerador(){
   const email = document.getElementById("usuario").value.trim();
   const senha = document.getElementById("senha").value;
@@ -956,6 +1049,8 @@ async function loginModerador(){
       return;
     }
 
+// Depois do login, verifica se existe um perfil de profissional configurado
+// e se ele está ativo. As permissões definem quais áreas poderá acessar.
     const { data: profissional, error: erroProfissional } =
   await supabaseClient
     .rpc("buscar_profissional_logado")
@@ -1002,6 +1097,7 @@ await renderizarVagasModerador();
   }
 }
 
+// Encerra a sessão do profissional no Supabase e volta à página pública.
 async function sairModerador(){
   window.profissionalLogada = null;
   await supabaseClient.auth.signOut();
@@ -1009,6 +1105,9 @@ async function sairModerador(){
   mostrarPaginaPublica();
   window.scrollTo({top:0,behavior:"smooth"});
 }
+// PAINEL DO MODERADOR: carrega os cadastros, aplica filtros e organiza
+// os animais por responsável antes de montar a lista na tela.
+// Atualiza o painel administrativo: consulta dados, aplica filtros e monta os cartões.
 async function renderizarModerador(){
 
   let cad = await carregarCadastros();
@@ -1026,6 +1125,7 @@ async function renderizarModerador(){
   const status =
     document.getElementById("filtroStatus")?.value || "";
 
+// Filtra os registros pelo nome, CPF e status escolhidos no painel.
   cad = cad.filter(c => {
 
     const nomeDono =
@@ -1055,6 +1155,7 @@ async function renderizarModerador(){
 
   });
 
+// Cria grupos para reunir, em uma mesma seção, os animais de cada responsável.
   const grupos = {};
 
   cad
@@ -1090,6 +1191,8 @@ async function renderizarModerador(){
 
     });
 
+// Para cada responsável, cria os cartões dos animais. Promise.all espera
+// os cartões ficarem prontos antes de juntar tudo em HTML.
   const partes = Object.values(grupos).map(async g => {
     const cards = await Promise.all(
       g.animais.map(c => criarCardModerador(c))
@@ -1131,6 +1234,8 @@ let html = (await Promise.all(partes)).join("");
   renderizarHistorico();
 
 }
+// Gera um endereço temporário para exibir uma foto guardada no Storage.
+// O prazo de 3600 segundos equivale a uma hora.
  async function obterUrlFoto(caminho){
 
   if(!caminho){
@@ -1174,7 +1279,10 @@ let html = (await Promise.all(partes)).join("");
   }
  }
 
+// Recolhe ou expande visualmente o grupo de animais de um mesmo responsável.
 function minimizarTutor(el){el.nextElementSibling.classList.toggle("minimizado");el.classList.toggle("minimizado")}
+// Monta o cartão de cada animal no painel da Secretaria, incluindo dados,
+// alertas e botões para alterar o atendimento.
 async function criarCardModerador(c){
   const alertas = (c.alertas || [])
     .map(a => "<li>" + escapeHTML(a) + "</li>")
@@ -1301,6 +1409,9 @@ async function criarCardModerador(c){
   '</div>';
 }
 
+// FUNÇÃO CENTRAL DE ATUALIZAÇÃO: altera os dados de um cadastro no banco
+// e depois atualiza as informações exibidas nos painéis.
+// Função reutilizada pelas ações administrativas para gravar alterações no cadastro.
 async function atualizarCadastro(protocolo, dadosAtualizados){
 
   const { error } = await supabaseClient
@@ -1320,6 +1431,8 @@ async function atualizarCadastro(protocolo, dadosAtualizados){
 
   return true;
 }
+// Permite escolher um novo status, mas aceita somente os valores previstos na lista.
+// Solicita um novo status e encaminha a alteração para a função central de atualização.
 async function alterarStatus(protocolo){
 
   const novo = prompt(
@@ -1359,6 +1472,8 @@ async function alterarStatus(protocolo){
 }
 
 
+// Registra a data e o horário informados e muda o status para 'Agendado'.
+// Registra os dados do agendamento e atualiza a situação do atendimento.
 async function agendar(protocolo){
 
   const data = prompt(
@@ -1377,6 +1492,8 @@ async function agendar(protocolo){
 }
 
 
+// Confirma que o atendimento foi realizado e atualiza o status do cadastro.
+// Marca o atendimento como concluído e registra essa mudança no histórico.
 async function marcarRealizado(protocolo){
 
   if(!confirm(
@@ -1392,6 +1509,8 @@ async function marcarRealizado(protocolo){
 
   alert("Atendimento marcado como realizado!");
 }
+// Cancela o cadastro e, em seguida, verifica se pode chamar alguém da fila de espera.
+// Cancela o cadastro e aciona a lógica que pode preencher uma vaga liberada.
 async function cancelarCadastro(protocolo){
 
   if(!confirm(
@@ -1447,6 +1566,8 @@ async function cancelarCadastro(protocolo){
   }
 
 }
+// Atualiza os números do painel: total de cadastros e quantidade por situação.
+// Recalcula os números apresentados nos cartões de resumo do painel.
 async function atualizarContadores(){
 
   const cadastros =
@@ -1474,6 +1595,8 @@ async function atualizarContadores(){
   ).length;
 
 }
+// Busca e exibe o histórico dos atendimentos já realizados.
+// Consulta os registros concluídos e transforma os dados em uma lista de histórico.
 async function renderizarHistorico(){
 
   const cadastros =
@@ -1531,6 +1654,8 @@ async function renderizarHistorico(){
 
 }
 
+// SALVAR MURAL: grava ou atualiza o aviso que aparece na página pública.
+// Salva no banco o texto do aviso que será exibido na página pública.
 async function salvarMural(){
 
   const p = window.profissionalLogada;
@@ -1610,6 +1735,7 @@ async function salvarMural(){
   );
 
 }
+// Lê o aviso ativo e atualiza o conteúdo e a data mostrados ao visitante.
 async function renderizarMural(){
 
   const mural =
@@ -1632,7 +1758,9 @@ async function renderizarMural(){
       : "";
 
 }
-  async function salvarLimiteVagas(){
+// SALVAR VAGAS: registra no banco o limite de vagas definido para um mês.
+  // Grava no banco o limite de vagas definido para o mês selecionado.
+async function salvarLimiteVagas(){
 
   const profissional =
     window.profissionalLogada;
@@ -1746,6 +1874,8 @@ async function renderizarMural(){
   await renderizarVagasModerador();
 
 }
+// Monta a visualização pública das vagas disponíveis por mês.
+// Calcula e apresenta ao público a situação das vagas de cada mês.
 async function renderizarVagasPublicas(){
 
   const meses = [];
@@ -1815,6 +1945,8 @@ for(const resultado of resultados){
     </p>
   `;
 }
+// Monta a visualização das vagas dentro do painel da Secretaria.
+// Mostra no painel interno os limites e quantidades de vagas para gerenciamento.
 async function renderizarVagasModerador(){
 
   const meses = [];
@@ -1891,6 +2023,8 @@ async function renderizarVagasModerador(){
   ).innerHTML = html;
 
 }
+// Cria uma conta de profissional e configura suas permissões de acesso.
+// Cria o acesso de um profissional e registra as permissões selecionadas.
 async function criarProfissional(){
 
   const atual = window.profissionalLogada;
@@ -1979,6 +2113,8 @@ async function criarProfissional(){
   }
 
 }
+// Busca e exibe os profissionais cadastrados e suas permissões.
+// Consulta os profissionais cadastrados e monta a lista de gerenciamento.
 async function renderizarProfissionais(){
 
   const atual = window.profissionalLogada;
@@ -2086,6 +2222,7 @@ async function renderizarProfissionais(){
 
   `).join("");
 }
+// Ativa ou desativa o acesso de um profissional, conforme a opção escolhida.
 async function alterarStatusProfissional(id, ativoAtual){
 
   if(!window.profissionalLogada?.administrador){
@@ -2132,6 +2269,7 @@ async function alterarStatusProfissional(id, ativoAtual){
 
   await renderizarProfissionais();
 }
+// Permite atualizar os dados e as permissões de um profissional existente.
 async function editarProfissional(id){
 
   if(!window.profissionalLogada?.administrador){
@@ -2200,6 +2338,8 @@ async function editarProfissional(id){
   await renderizarProfissionais();
 
 }
+// EXPORTAÇÃO: transforma os cadastros em um arquivo CSV que pode ser aberto
+// em programas de planilha, como Excel ou Google Planilhas.
   async function exportarCSV(){
   const cadastros =
     await carregarCadastros();
@@ -2278,6 +2418,8 @@ a.click();
 
 URL.revokeObjectURL(url);
 }
+// Estas funções alternam entre a página pública e a área interna do sistema.
+// Alterna a exibição entre o conteúdo público e as áreas internas do sistema.
 function mostrarPaginaPublica(){
   document.getElementById("inicio").style.display = "flex";
   document.getElementById("muralPublico").style.display = "block";
@@ -2299,9 +2441,12 @@ function esconderPaginaPublica(){
 function inicio(){window.scrollTo({top:0,behavior:"smooth"})}
 function irCadastro(){document.getElementById("cadastro").scrollIntoView({behavior:"smooth"})}
 
+// Fecha menus/janelas quando ocorre um clique fora dos elementos correspondentes.
 document.addEventListener("click",e=>{
   if(e.target.classList.contains("modal"))e.target.style.display="none";
 });
+// Inicialização: só executa depois que o HTML foi carregado pelo navegador.
+// Nesta etapa o site busca os dados iniciais e prepara as áreas públicas.
 document.addEventListener("DOMContentLoaded", async ()=>{
 
   await renderizarMural();
